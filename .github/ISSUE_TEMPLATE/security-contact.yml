@@ -1,0 +1,17 @@
+name: Request a private security contact
+description: Ask for private reporting instructions without disclosing a vulnerability.
+title: "[Security contact] Request private reporting instructions"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Prefer Security → Advisories → Report a vulnerability when that private form is available.
+        This issue is only a request for a private contact method. Do not add vulnerability details,
+        reproduction steps, account information, tokens or attachments here.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Private contact request
+      options:
+        - label: I am requesting private reporting instructions and have included no vulnerability details or private account information.
+          required: true

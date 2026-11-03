@@ -1,0 +1,20 @@
+{
+  "cards-compact": {
+    "frames": 3,
+    "durationSeconds": 7,
+    "bytes": 276000,
+    "source": "isolated native demo"
+  },
+  "print-check": {
+    "frames": 3,
+    "durationSeconds": 7,
+    "bytes": 69749,
+    "source": "isolated native demo"
+  },
+  "history-range": {
+    "frames": 3,
+    "durationSeconds": 7,
+    "bytes": 189225,
+    "source": "isolated native demo"
+  }
+}

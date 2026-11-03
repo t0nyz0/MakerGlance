@@ -1,0 +1,14 @@
+name: Feature idea
+description: Explain the creator workflow and outcome you need.
+body:
+  - type: textarea
+    id: workflow
+    attributes:
+      label: What are you trying to accomplish?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior and relevant API limitations
+      description: Do not include live account data or credentials.

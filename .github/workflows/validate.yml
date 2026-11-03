@@ -1,0 +1,30 @@
+name: Validate source
+
+# Manual while private. Automatic hosted-runner use is an owner decision.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out reviewed source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Source privacy and artifact guard
+        run: |
+          python3 scripts/check_repository.py
+          python3 scripts/check_repository.py --history --secrets-only
+          python3 scripts/check_documentation.py
+          python3 scripts/update_readme_badges.py --check
+          python3 -m unittest discover -s scripts -p 'test_*.py'
+      - name: Unit tests
+        run: swift test
+      - name: Package local ad-hoc build
+        run: bash scripts/build.sh
