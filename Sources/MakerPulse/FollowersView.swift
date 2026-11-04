@@ -36,10 +36,12 @@ struct FollowersView: View {
             else { HStack(spacing: 15) { followerSearch; Spacer(); followerFilters } }
             Table(followers) {
                 TableColumn("Follower") { follower in
-                    HStack(spacing: 12) {
-                        RemoteImage(url: follower.avatar, symbol: "person.fill").frame(width: 32, height: 32).clipShape(Circle())
-                        VStack(alignment: .leading, spacing: 3) { Text(follower.name).appFont(.callout, weight: .medium); Text("@\(follower.handle)").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
-                    }.frame(minHeight: 42 * max(1, textScale)).padding(.vertical, 5)
+                    if let url = ActivityLinks.makerProfile(handle: follower.handle) {
+                        Link(destination: url) { followerIdentity(follower) }
+                            .buttonStyle(.plain).disabled(model.isDemo)
+                            .help("Open \(follower.handle) on MakerWorld")
+                            .accessibilityIdentifier("follower-profile-" + follower.id)
+                    } else { followerIdentity(follower) }
                 }.width(max(160, (geometry.size.width - 285) * 0.58))
                 TableColumn("First observed") { follower in
                     if let date = follower.firstObservedAt { Text(date.formatted(date: .abbreviated, time: .shortened)).appFont(size: 12).lineLimit(3).fixedSize(horizontal: false, vertical: true) }
@@ -50,7 +52,7 @@ struct FollowersView: View {
                         .appFont(size: 12).foregroundStyle(follower.isFollowing ? Palette.accent : .secondary).lineLimit(2)
                 }.width(120 * min(1.25, textScale))
                 TableColumn("") { follower in
-                    if let url = URL(string: "https://makerworld.com/en/@\(follower.handle.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? follower.id)") {
+                    if let url = ActivityLinks.makerProfile(handle: follower.handle) {
                         Link(destination: url) { Image(systemName: "arrow.up.right").foregroundStyle(Palette.secondaryText) }.help("Open \(follower.handle) on MakerWorld").disabled(model.isDemo)
                     }
                 }.width(24)
@@ -64,6 +66,13 @@ struct FollowersView: View {
             .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topLeading)
             .clipped()
         }
+    }
+    func followerIdentity(_ follower: Follower) -> some View {
+        HStack(spacing: 12) {
+            RemoteImage(url: follower.avatar, symbol: "person.fill").frame(width: 32, height: 32).clipShape(Circle())
+            VStack(alignment: .leading, spacing: 3) { Text(follower.name).appFont(.callout, weight: .medium); Text("@\(follower.handle)").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
+        }.frame(maxWidth: .infinity, minHeight: 42 * max(1, textScale), alignment: .leading)
+            .padding(.vertical, 5).contentShape(Rectangle())
     }
     var followerSearch: some View {
         NativeSearchField(text: $search, placeholder: "Search name or handle", accessibilityLabel: "Search followers", identifier: "followers-search")

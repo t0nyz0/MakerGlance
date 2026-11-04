@@ -4,8 +4,8 @@
 <p align="center">Your MakerWorld creator workspace, at home on the Mac.</p>
 <!-- verified-badges:start -->
 <p align="center">
-<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.2"></a>
-<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 157 passing"></a>
+<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.3"></a>
+<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 164 passing"></a>
 <a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/build.svg" alt="local build: verified"></a>
 <a href="#build--try-it"><img src="docs/media/badges/macos.svg" alt="macOS: 14.0 target"></a>
 <a href="Package.swift"><img src="docs/media/badges/swift.svg" alt="Swift: 6"></a>
@@ -32,7 +32,7 @@
 | **Model performance** | Track likes, downloads, prints, boosts and saves. Compare lifetime totals with observed gains for Today, 24 hours or seven days; sort watched models and switch between Cards and Compact. |
 | **Trends & reports** | Review your local observation history and available Creator Center period reports, with local-day growth kept separate from server UTC reports. |
 | **Activity & alerts** | Follow selected model changes, milestones, new followers and supported account activity. Choose notification categories, pause individual model alerts, mark updates read or clear the local inbox. |
-| **Followers** | Search and sort your community, see when new followers were first observed, and open an identified single follower's MakerWorld profile from its activity entry. |
+| **Followers** | Search and sort your community, see when new followers were first observed, and click a follower's name, avatar or identified single-follower update to open their MakerWorld profile. |
 | **Points & wallet** | Keep regular points, exclusive points, cash-redemption estimates and wallet funds distinct. Review supplied transaction reasons and model context where available. |
 | **My Prints** | Find your own recorded cloud jobs by model, printer or plate. Filter by status and date, sort the history, and open supplied job details. |
 | **Desktop workflow** | Check totals and unread activity from the menu bar with the main window closed. Choose System, Light or Dark appearance, adjust text size and set your refresh interval. |
@@ -106,7 +106,7 @@ The existing authorized Bambu connection supplies the read-only task feed; no St
 
 **A useful first-seen timeline.** Search and sort followers. Existing accounts stay date unknown; new observations get a persistent first-seen time, never a guessed original follow date.
 
-Identified single-follower entries in Activity, the dashboard or the tray open that person's MakerWorld profile in your browser, including saved entries with a known identity. Grouped updates remain summaries. The tray has **Mark all read** beside its unread count; Activity also supports clearing individual updates or the inbox. These actions stay local. Choose notification categories in Settings; printer/device updates are off by default.
+Click a follower's name or avatar in the Followers table, or an identified single-follower entry in Activity, the dashboard or the tray, to open that person's MakerWorld profile in your browser. Single-follower macOS notification clicks use the same identity lookup, including older delivered notifications whose follower ID is still known. Grouped follower notifications open the follower list; mixed update summaries open Activity. The tray has **Mark all read** beside its unread count; Activity also supports clearing individual updates or the inbox. These actions stay local. Choose notification categories in Settings; printer/device updates are off by default.
 
 All models, including newly discovered ones, start watched. Models has working All / Watched / Paused filters and individual alert choices. Pausing alerts keeps observations. The initial import is quiet; persistent milestone high-water marks and event IDs prevent repeated alerts.
 

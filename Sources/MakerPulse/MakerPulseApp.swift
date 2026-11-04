@@ -6,10 +6,14 @@ import MakerPulseCore
 @MainActor final class AppDelegate: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
     static weak var current: AppDelegate?
     var reopenHandler: (() -> Void)?
+    private weak var notificationModel: AppModel?
+    private var pendingNotificationIdentifiers: [String] = []
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        UNUserNotificationCenter.current().delegate = self
+    }
     func applicationDidFinishLaunching(_ notification: Notification) {
         Self.current = self
         NSApp.setActivationPolicy(CommandLine.arguments.contains("--qa-library") || CommandLine.arguments.contains("--demo-capture") ? .accessory : .regular)
-        UNUserNotificationCenter.current().delegate = self
         NSApp.applicationIconImage = AppGlyph.applicationIcon
         NSApp.dockTile.display()
         if let flag = CommandLine.arguments.firstIndex(of: "--icon-audit"), CommandLine.arguments.indices.contains(flag + 1) {
@@ -20,6 +24,21 @@ import MakerPulseCore
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { if !flag { reopenHandler?() }; return true }
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions { [.banner, .sound, .badge] }
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier else { return }
+        let identifier = response.notification.request.identifier
+        await receiveNotificationClick(identifier)
+    }
+    private func receiveNotificationClick(_ identifier: String) {
+        if let notificationModel { notificationModel.openNotification(identifier) }
+        else { pendingNotificationIdentifiers.append(identifier) }
+    }
+    func connectNotificationHandler(to model: AppModel) {
+        notificationModel = model
+        let pending = pendingNotificationIdentifiers
+        pendingNotificationIdentifiers.removeAll()
+        pending.forEach(model.openNotification)
+    }
 }
 
 @main struct MakerGlanceApp: App {
@@ -30,6 +49,9 @@ import MakerPulseCore
             RootView().environmentObject(model).appFont(.body).controlSize(model.state.preferences.textSizePercent > 120 ? .large : .regular).environment(\.appTextScale, model.state.preferences.textScaleFactor).frame(minWidth: 950, minHeight: 660)
                 .tint(Palette.controlFill)
                 .onAppear { delegate.reopenHandler = { model.showMain() } }
+                .onChange(of: model.loaded, initial: true) { _, loaded in
+                    if loaded { delegate.connectNotificationHandler(to: model) }
+                }
         }
         .defaultSize(width: 1280, height: 860)
         .commands {

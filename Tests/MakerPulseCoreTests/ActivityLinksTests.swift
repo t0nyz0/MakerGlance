@@ -44,4 +44,45 @@ final class ActivityLinksTests: XCTestCase {
         XCTAssertEqual(url.host, "makerworld.com")
         XCTAssertNil(url.query); XCTAssertNil(url.fragment)
     }
+
+    func testFollowerTableProfileUsesNormalizedHandleAndRejectsMissingIdentity() {
+        XCTAssertEqual(ActivityLinks.makerProfile(handle: " @samplemaker ")?.absoluteString, "https://makerworld.com/en/@samplemaker")
+        for handle in ["", " ", "@", "maker\nname", "maker\u{0000}name"] {
+            XCTAssertNil(ActivityLinks.makerProfile(handle: handle))
+        }
+    }
+
+    func testNotificationClickUsesStoredFollowerIdentity() throws {
+        let event = Activity(id: "followers:42", date: Date(), title: "New follower", detail: "", symbol: "person", presentation: ActivityPresentation(actorID: "42", actorHandle: "samplemaker"))
+        let url = try XCTUnwrap(ActivityLinks.makerProfile(handle: "samplemaker"))
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: event.id, activities: [event], followers: []), .profile(url))
+    }
+
+    func testOldDeliveredNotificationResolvesStableIDAfterActivityWasPruned() throws {
+        let follower = Follower(id: "42", name: "Not a URL handle", handle: "currentHandle")
+        let url = try XCTUnwrap(ActivityLinks.makerProfile(handle: follower.handle))
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: "followers:42", activities: [], followers: [follower]), .profile(url))
+    }
+
+    func testGroupedNotificationClickShowsFollowersWithoutChoosingOnePerson() {
+        let follower = Follower(id: "42", name: "Maker", handle: "samplemaker")
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: "followers:42,43", activities: [], followers: [follower]), .followers)
+    }
+
+    func testCoalescedNotificationClickShowsActivityInsteadOfPickingAFollower() {
+        let follower = Follower(id: "42", name: "Maker", handle: "samplemaker")
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: "followers:42|model:1:likes:20", activities: [], followers: [follower]), .activity)
+    }
+
+    func testUnknownNotificationIdentityDoesNotOpenUnverifiedProfile() {
+        let mismatch = Activity(id: "followers:43", date: Date(), title: "New follower", detail: "@displayName", symbol: "person", presentation: ActivityPresentation(actorID: "42", actorHandle: "wrongMaker"))
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: mismatch.id, activities: [mismatch], followers: []), .followers)
+        XCTAssertEqual(ActivityLinks.notificationDestination(for: "followers:", activities: [], followers: []), .followers)
+    }
+
+    func testOtherNotificationClicksShowActivity() {
+        for id in ["profile:1:followers:milestone:1000", "model:1:likes:20", "balance:100"] {
+            XCTAssertEqual(ActivityLinks.notificationDestination(for: id, activities: [], followers: []), .activity)
+        }
+    }
 }

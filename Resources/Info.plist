@@ -6,8 +6,8 @@
 <key>CFBundleIdentifier</key><string>com.t0nyz0.MakerPulse</string>
 <key>CFBundleExecutable</key><string>MakerGlance</string>
 <key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>3.9.2</string>
-<key>CFBundleVersion</key><string>27</string>
+<key>CFBundleShortVersionString</key><string>3.9.3</string>
+<key>CFBundleVersion</key><string>28</string>
 <key>CFBundleIconFile</key><string>MakerGlance.icns</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>

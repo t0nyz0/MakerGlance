@@ -92,6 +92,17 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         else { openWindowAction?() }
         NSApp.activate(ignoringOtherApps: true)
     }
+    func openNotification(_ identifier: String) {
+        guard !isDemo, !isolatedQA else { return }
+        switch ActivityLinks.notificationDestination(for: identifier, activities: state.activity, followers: state.followers) {
+        case .profile(let url):
+            if !NSWorkspace.shared.open(url) { showMain(.activity) }
+        case .followers:
+            analyticsSection = .community; showMain(.creator)
+        case .activity:
+            showMain(.activity)
+        }
+    }
     var activeFollowers: [Follower] { state.followers.filter(\.isFollowing) }
     var appearance: AppearanceChoice { state.preferences.appearance }
     var effectiveColorScheme: ColorScheme? {
