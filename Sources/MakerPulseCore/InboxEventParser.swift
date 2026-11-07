@@ -17,6 +17,7 @@ enum InboxEventParser {
         .init(type: "107", key: "draftImportFinished", kind: .model, title: "Draft import finished", summary: "MakerWorld finished importing drafts. Individual import results are unavailable."),
         .init(type: "254", key: "instanceRatingRemind", kind: .model, title: "Print-profile rating reminder", summary: "MakerWorld is asking you to rate a print profile."),
         .init(type: "368", key: "auditSystem", kind: .system, title: "Copyright review update", summary: "MakerWorld updated a copyright review. Review details are unavailable."),
+        .init(type: "401", key: "system", kind: .system, title: "MakerWorld system update", summary: "MakerWorld posted a system message. Message details are unavailable."),
         .init(type: "412", key: "systemForWeb", kind: .system, title: "MakerWorld system update", summary: "MakerWorld posted a system message. Message details are unavailable."),
         .init(type: "501", key: "pointBoostingRightGet", kind: .system, title: "Boost tokens received", summary: "MakerWorld reports new boost tokens. Token and expiry details are unavailable."),
         .init(type: "502", key: "pointBoostingRightExpireRemind", kind: .system, title: "Boost token expiry reminder", summary: "MakerWorld sent a boost token expiry reminder. The expiry date is unavailable."),
@@ -61,16 +62,16 @@ enum InboxEventParser {
         var pieces: [String] = []
         switch definition.type {
         case "811":
-            if let name, let tier { pieces = ["\(name) subscribed to your \(tier) membership tier."] }
+            if let name, let tier { pieces = ["\(name) subscribed to your \(tier) tier."] }
             else if let name { pieces = ["\(name) subscribed to your membership. Tier details are unavailable."] }
-            else if let tier { pieces = ["Someone subscribed to your \(tier) membership tier. Subscriber details are unavailable."] }
+            else if let tier { pieces = ["Someone subscribed to your \(tier) tier. Subscriber details are unavailable."] }
         case "501", "502":
             // Preserve the supplied timestamp, rather than guessing its timezone
             // or the number of tokens from a notification template.
             if let expiry = fields["expiry"] {
                 pieces = [definition.type == "501" ? "Boost tokens received." : "Boost token expiry reminder.", "Expires: \(expiry)"]
             }
-        case "412":
+        case "401", "412":
             title = fields["title"] ?? title
             pieces = [fields["body"]].compactMap { $0 }
         case "368":

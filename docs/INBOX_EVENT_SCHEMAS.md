@@ -19,6 +19,7 @@ The web renderer selects numeric types and reads these payload fields. MakerGlan
 | 107 | `draftImportFinished` | `draftImportInfo.successNum`, `draftImportInfo.failedNum`; import completion does not imply every import succeeded |
 | 254 | `instanceRatingRemind` | `instanceInfo.title`, `designInfo.title`, `designInfo.id`; rating reminder in the Models category |
 | 368 | `auditSystem` | `content`, `contentDetail`, `opDesc`; review links lead to the copyright service |
+| 401 | `system` | `systemInfo.title`, `systemInfo.newContent`; standard system-message variant |
 | 412 | `systemForWeb` | `systemInfo.title`, `systemInfo.newContent`; web system-message variant |
 | 501 | `pointBoostingRightGet` | `expireAt`; boost-token receipt, distinct from a model receiving boosts |
 | 502 | `pointBoostingRightExpireRemind` | `expireAt`; boost-token expiry reminder |

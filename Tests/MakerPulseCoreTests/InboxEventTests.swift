@@ -23,7 +23,7 @@ final class InboxEventTests: XCTestCase {
     func testSubscriberUsesNestedIdentityAndTierRatherThanEnvelopeSender() throws {
         let event = try XCTUnwrap(parse(#"{"hits":[{"id":"sample-event","type":811,"from":{"name":"System","uid":999},"createTime":"2026-11-07T21:48:24Z","newSubscriberForCreator":{"userInfo":{"uid":42,"name":"Sample member","handle":"samplemember","avatar":"https://cdn.bblmw.com/member.jpg"},"membershipLevelInfo":{"title":"Standard","creatorInfo":{"name":"Creator"}}}}]}"#).first)
         XCTAssertEqual(event.title, "New subscriber"); XCTAssertEqual(event.kind, .system)
-        XCTAssertEqual(event.detail, "Sample member subscribed to your Standard membership tier.")
+        XCTAssertEqual(event.detail, "Sample member subscribed to your Standard tier.")
         XCTAssertEqual(event.presentation?.actorID, "42"); XCTAssertEqual(event.presentation?.actorHandle, "samplemember")
         XCTAssertFalse(event.detail.contains("System")); XCTAssertFalse(event.detail.contains("Creator"))
         XCTAssertEqual(event.occurredAt, ISO8601DateFormatter().date(from: "2026-11-07T21:48:24Z"))
@@ -38,15 +38,15 @@ final class InboxEventTests: XCTestCase {
     }
     func testSubscriberPartialRefetchMergesFieldsAfterRestartWithoutReplay() throws {
         let full = try parse(#"{"hits":[{"id":"sample-event","type":811,"createTime":"2026-11-07T21:48:24Z","newSubscriberForCreator":{"userInfo":{"uid":42,"name":"Sample member"},"membershipLevelInfo":{"title":"Standard"}}}]}"#)
-        for fragment in [#""userInfo":{"name":"Updated member"}"#, #""membershipLevelInfo":{"title":"Updated tier"}"#] {
+        for fragment in [#""userInfo":{"name":"Updated member"}"#, #""membershipLevelInfo":{"title":"Premium"}"#] {
             var state = saved(full)
             state = try JSONDecoder().decode(LibraryState.self, from: JSONEncoder().encode(state))
             let sparse = try parse("{\"hits\":[{\"id\":\"sample-event\",\"type\":811,\"newSubscriberForCreator\":{\(fragment)}}]}")
             XCTAssertTrue(AccountAnalytics.ingestEvents(sparse, into: &state, at: now).isEmpty)
             XCTAssertFalse(state.activity[0].detail.contains("unavailable"))
             XCTAssertEqual(state.activity.count, 1); XCTAssertFalse(state.activity[0].isRead)
-            if fragment.contains("userInfo") { XCTAssertEqual(state.activity[0].detail, "Updated member subscribed to your Standard membership tier.") }
-            else { XCTAssertEqual(state.activity[0].detail, "Sample member subscribed to your Updated tier membership tier.") }
+            if fragment.contains("userInfo") { XCTAssertEqual(state.activity[0].detail, "Updated member subscribed to your Standard tier.") }
+            else { XCTAssertEqual(state.activity[0].detail, "Sample member subscribed to your Premium tier.") }
             XCTAssertEqual(state.activity[0].presentation?.actorID, "42")
         }
     }
@@ -79,6 +79,11 @@ final class InboxEventTests: XCTestCase {
         let long = try JSONSerialization.data(withJSONObject: ["hits": [["id": 2, "type": 412, "systemForWeb": ["systemInfo": ["title": String(repeating: "x", count: 1000), "newContent": String(repeating: "y", count: 5000)]]]]])
         let bounded = try XCTUnwrap(AccountParser.events(long).items.first)
         XCTAssertEqual(bounded.title.count, 300); XCTAssertEqual(bounded.detail.count, 2000)
+    }
+    func testStandardSystemMessageAndMembershipNamedTierUseVerifiedReadableText() throws {
+        let rows = try parse(#"{"hits":[{"id":1,"type":401,"system":{"systemInfo":{"title":"System notice","newContent":"<p>Supplied announcement</p>"}}},{"id":2,"type":811,"newSubscriberForCreator":{"userInfo":{"name":"Sample member"},"membershipLevelInfo":{"title":"Standard Membership"}}}]}"#)
+        XCTAssertEqual(rows[0].title, "System notice"); XCTAssertEqual(rows[0].detail, "Supplied announcement")
+        XCTAssertEqual(rows[1].detail, "Sample member subscribed to your Standard Membership tier.")
     }
     func testBadgeImportAndReviewReadOnlySuppliedFields() throws {
         let rows = try parse(#"{"hits":[{"id":1,"type":815,"newBadgeReceived":{"badgeTitle":"Sample badge","sparkAward":{"milestone":100}}},{"id":2,"type":107,"draftImportFinished":{"draftImportInfo":{"successNum":0,"failedNum":2}}},{"id":3,"type":368,"auditSystem":{"content":"Review update","contentDetail":"Details","opDesc":"Action explanation"}}]}"#)
