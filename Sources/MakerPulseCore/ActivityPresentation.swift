@@ -10,20 +10,22 @@ public struct ActivityPresentation: Codable, Equatable, Sendable {
     public var modelTitle: String?
     public var modelCover: String?
     public var content: String?
+    public var eventFields: [String: String]?
     public var kind: EventKind?
     public var metric: Metric?
     public var delta: Int?
     public var originalTimestamp: Bool?
     public init(actorID: String? = nil, rewardMetric: RewardMetric? = nil, rewardDelta: Decimal? = nil, actorName: String? = nil, actorHandle: String? = nil, actorAvatar: String? = nil, modelTitle: String? = nil, modelCover: String? = nil,
-        content: String? = nil, kind: EventKind? = nil, metric: Metric? = nil, delta: Int? = nil, originalTimestamp: Bool? = nil) {
+        content: String? = nil, eventFields: [String: String]? = nil, kind: EventKind? = nil, metric: Metric? = nil, delta: Int? = nil, originalTimestamp: Bool? = nil) {
         self.actorID = actorID; self.rewardMetric = rewardMetric; self.rewardDelta = rewardDelta
         self.actorName = actorName; self.actorHandle = actorHandle; self.actorAvatar = actorAvatar; self.modelTitle = modelTitle; self.modelCover = modelCover
-        self.content = content; self.kind = kind; self.metric = metric; self.delta = delta; self.originalTimestamp = originalTimestamp
+        self.content = content; self.eventFields = eventFields; self.kind = kind; self.metric = metric; self.delta = delta; self.originalTimestamp = originalTimestamp
     }
     public func merging(_ incoming: Self?) -> Self {
         guard let incoming else { return self }
         return Self(actorID: incoming.actorID ?? actorID, rewardMetric: incoming.rewardMetric ?? rewardMetric, rewardDelta: incoming.rewardDelta ?? rewardDelta, actorName: incoming.actorName ?? actorName, actorHandle: incoming.actorHandle ?? actorHandle, actorAvatar: incoming.actorAvatar ?? actorAvatar,
-            modelTitle: incoming.modelTitle ?? modelTitle, modelCover: incoming.modelCover ?? modelCover, content: incoming.content ?? content, kind: incoming.kind ?? kind,
+            modelTitle: incoming.modelTitle ?? modelTitle, modelCover: incoming.modelCover ?? modelCover, content: incoming.content ?? content,
+            eventFields: eventFields == nil && incoming.eventFields == nil ? nil : (eventFields ?? [:]).merging(incoming.eventFields ?? [:], uniquingKeysWith: { _, new in new }), kind: incoming.kind ?? kind,
             metric: incoming.metric ?? metric, delta: incoming.delta ?? delta, originalTimestamp: incoming.originalTimestamp ?? originalTimestamp)
     }
 }

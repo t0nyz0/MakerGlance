@@ -56,6 +56,7 @@ public enum AccountParser {
         return Page(items: try hits.map { event in
             guard let id = event["id"].string else { throw PulseError.malformed("stable activity IDs") }
             let rawType = event["type"].string ?? "unknown"
+            if let supported = InboxEventParser.parse(event, id: id, type: rawType) { return supported }
             let mappings: [(String, EventKind, String)] = [
                 ("designCommented", .comment, "New model comment"), ("commentReplied", .reply, "New comment reply"),
                 ("commentMentioned", .mention, "You were mentioned"), ("ratingMentioned", .mention, "You were mentioned in a rating"),

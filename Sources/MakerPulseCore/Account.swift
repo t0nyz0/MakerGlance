@@ -127,19 +127,47 @@ public struct AccountState: Codable, Sendable {
 }
 
 public enum AccountAnalytics {
+    // Local metadata repair has no alert path and never touches read/dismissed
+    // state, seen IDs, import baselines, preferences or activity membership.
+    @discardableResult public static func repairEventDescriptions(in state: inout LibraryState) -> Int {
+        guard var account = state.account else { return 0 }
+        var updates: [String: AccountEvent] = [:]
+        account.events = account.events.map { event in
+            guard let update = InboxEventParser.upgrade(event) else { return event }
+            updates[event.id] = update; return update
+        }
+        for i in state.activity.indices {
+            let id = state.activity[i].id
+            guard id.hasPrefix("remote:"), let event = updates[String(id.dropFirst(7))] else { continue }
+            enrichActivity(&state.activity[i], using: event)
+        }
+        state.account = account
+        return updates.count
+    }
+
+    private static func enrichActivity(_ activity: inout Activity, using event: AccountEvent) {
+        activity.title = event.title
+        activity.detail = event.detail + (event.occurredAt == nil ? " · original timestamp unavailable" : "")
+        activity.symbol = event.kind.symbol
+        activity.modelID = event.modelID ?? activity.modelID
+        activity.presentation = (activity.presentation ?? ActivityPresentation()).merging(event.presentation)
+        if let time = event.occurredAt { activity.date = time }
+    }
+
     public static func ingestEvents(_ events: [AccountEvent], into state: inout LibraryState, at date: Date) -> [Activity] {
         var account = state.account ?? AccountState(); let baseline = !account.eventsImported
-        let fresh = events.filter { account.seenEventIDs.insert($0.id).inserted }
-        let updates = Dictionary(events.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let previous = Dictionary(account.events.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let observations = events.map { incoming -> AccountEvent in
+            guard let old = previous[incoming.id] else { return incoming }
+            return InboxEventParser.enriching(incoming, from: old)
+        }
+        let fresh = observations.filter { account.seenEventIDs.insert($0.id).inserted }
+        let updates = Dictionary(observations.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         account.events = account.events.map { updates[$0.id] ?? $0 }
         for i in state.activity.indices {
             let key = state.activity[i].id
             guard key.hasPrefix("remote:"), let update = updates[String(key.dropFirst(7))] else { continue }
-            state.activity[i].title = update.title
-            state.activity[i].detail = update.detail + (update.occurredAt == nil ? " · original timestamp unavailable" : "")
-            state.activity[i].symbol = update.kind.symbol
-            state.activity[i].presentation = (state.activity[i].presentation ?? ActivityPresentation()).merging(update.presentation)
-            if let time = update.occurredAt { state.activity[i].date = time }
+            enrichActivity(&state.activity[i], using: update)
         }
         account.events = Array((fresh + account.events).sorted { ($0.occurredAt ?? .distantPast) > ($1.occurredAt ?? .distantPast) }.prefix(5000))
         account.eventsImported = true; account.lastEventSync = date

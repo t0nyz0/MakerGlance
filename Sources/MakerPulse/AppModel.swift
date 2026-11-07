@@ -163,7 +163,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
             let saved = try await store.load()
             let rewardsHistory = try await store.balanceHistory()
             state = await Task.detached(priority: .userInitiated) {
-                var repaired = saved; RewardLedger.repair(&repaired, history: rewardsHistory); return repaired
+                var repaired = saved
+                RewardLedger.repair(&repaired, history: rewardsHistory)
+                AccountAnalytics.repairEventDescriptions(in: &repaired)
+                return repaired
             }.value
             if !(state.account?.preferences.eventNotifications.contains(.device) ?? false) {
                 state.activity.removeAll { $0.presentation?.kind == .device || $0.title == "Printer update" }

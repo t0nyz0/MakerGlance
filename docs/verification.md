@@ -1,5 +1,11 @@
 # Verification
 
+## 3.9.4 inbox descriptions
+
+Version 3.9.4 build 29 passed 184 Swift tests, including 20 inbox-event tests, eight repository-tool tests, source/history privacy guards, documentation checks, an optimized Apple Silicon build and exact bundle/signature/architecture verification. An independent review found and resolved partial-refresh context loss and a combined-text bound gap; the independent inbox test run passed all 20 cases. The isolated fictional native regression suite passed 48 checks without using the live library, network or Keychain.
+
+Read-only replay against an existing local library verified quiet historical description repair, unchanged event/activity identities and read/dismissal controls, restart idempotence and zero reingest alerts. No account payloads or private identity fixtures were added to the repository. [Verified inbox schemas](INBOX_EVENT_SCHEMAS.md) document the supporting public renderer fields and remaining limits. Package preparation and installation are recorded separately from these source checks; no published GitHub Release is implied.
+
 This public-facing record omits earlier private-machine paths, account identifiers and live observations. Historical versions remain a pre-publication privacy review item; replacing this file does not remove Git history.
 
 ## Local checks

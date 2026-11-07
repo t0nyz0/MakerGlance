@@ -21,6 +21,8 @@ The app does not mark server messages read, mutate remote notification preferenc
 
 Private inbox coverage is limited to the exposed categories and returned history. Stable event IDs are remembered locally. Quiet initial imports prevent historical alert storms. Model count alerts and feed boosts are merged only where matching server identifiers/counts support it.
 
+Membership subscribers, print-profile reminders, boost-token notices and other verified inbox shapes have explicit parsing. Older generic descriptions are repaired locally without replaying alerts; discarded details remain unavailable until supplied again. [Verified inbox schemas and limits](INBOX_EVENT_SCHEMAS.md).
+
 ## Histories and dates
 
 - Local snapshots begin when observation starts. Today is a local calendar day with explicit partial coverage; the other activity windows are rolling.

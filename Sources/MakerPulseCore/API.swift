@@ -46,12 +46,18 @@ public actor MakerWorldAPI: SessionBackend {
         var events: [AccountEvent] = []
         for (type, kind) in [(1, EventKind.comment), (2, .model), (3, .system), (4, .device), (5, .community), (6, .crowdfunding)] {
             let rows: [AccountEvent] = try await Pagination.collect { offset, limit in
-                try AccountParser.events(await self.request(path: "/v1/user-service/my/messages", query: ["type": "\(type)", "offset": "\(offset)", "limit": "\(limit)"], token: token), group: kind)
+                try await self.eventPage(type: type, kind: kind, offset: offset, limit: limit, token: token)
             }
             events += rows
         }
         var seen = Set<String>()
         return events.filter { seen.insert($0.id).inserted }
+    }
+    private func eventPage(type: Int, kind: EventKind, offset: Int, limit: Int, token: String) async throws -> Page<AccountEvent> {
+        let data = try await request(path: "/v1/user-service/my/messages", query: ["type": "\(type)", "offset": "\(offset)", "limit": "\(limit)"], token: token)
+        // Capture shapes from the newest page only, without private field values.
+        if offset == 0 { schemaDiagnostics["inbox-\(type)"] = SchemaDiagnostics.describeInbox(data) }
+        return try AccountParser.events(data, group: kind)
     }
     public func printTasks(known: PrintHistory?, forceFull: Bool) async throws -> PrintTaskBatch {
         guard let token = sessionToken else { throw PulseError.authentication }
