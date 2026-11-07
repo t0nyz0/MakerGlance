@@ -127,7 +127,7 @@ Requests use bounded pagination, deduplication, pacing and transient backoff. In
 
 ## Build & try it
 
-Source preview · **Build locally. No public binary release or notarized download is advertised.**
+[Download MakerGlance 3.9.4](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.4) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**; macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
 
 ```sh
 git clone https://github.com/t0nyz0/MakerGlance.git
@@ -162,7 +162,7 @@ The offline demo uses original fictional fixtures/artwork and a separate tempora
 
 History stays in local SQLite; sessions stay in Keychain. Requests go to Bambu/MakerWorld services and approved image CDNs. No app analytics SDK or developer-operated data service is present. Local history is **not encrypted by the app**. The legacy bundle/Keychain identifier and `MakerPulse` support-directory name preserve existing installations.
 
-[Preview download notes](docs/DOWNLOADS.md) · [Privacy & storage](docs/PRIVACY.md) · [Security policy](SECURITY.md) · [Review findings](docs/SECURITY_REVIEW.md) · [Release readiness](docs/RELEASE_READINESS.md)
+[Download notes](docs/DOWNLOADS.md) · [Privacy & storage](docs/PRIVACY.md) · [Security policy](SECURITY.md) · [Review findings](docs/SECURITY_REVIEW.md) · [Release readiness](docs/RELEASE_READINESS.md)
 
 Publication uses a clean source snapshot; the original private development history is kept separately. See the [publication review](docs/PUBLICATION_REVIEW.md) for validation and the approval boundary. These checks reduce risk without providing a security guarantee.
 

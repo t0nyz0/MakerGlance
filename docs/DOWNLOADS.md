@@ -1,12 +1,12 @@
-# MakerGlance preview downloads
+# MakerGlance downloads
 
-Release assets are being prepared. Until an approved GitHub Release is published, build from source using the README. Local preparation is not a published download.
+Download the Apple Silicon ZIP or DMG from the [MakerGlance 3.9.4 GitHub Release](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.4). This release is version 3.9.4, build 30. Source builds remain available through the README.
 
-The preview build targets **Apple Silicon (arm64), macOS 14 or later**. Intel is not included. Testing used Apple Silicon on the current macOS; the oldest target has not been exercised.
+The build targets **Apple Silicon (arm64), macOS 14 or later**. Intel is not included. Testing used Apple Silicon on the current macOS; the oldest target has not been exercised.
 
 ## Signing and installation
 
-This build is **locally ad-hoc signed, not Developer ID signed or notarized**. macOS may block a quarantined downloaded copy. No automatic bypass, security-setting change or Gatekeeper disabling is part of the app or installer. Building from the reviewed source remains an option.
+This build is **locally ad-hoc signed, not Developer ID signed or notarized by Apple**. Its local signature checks file integrity; it does not verify the publisher through Apple's Developer ID program. macOS may display a developer warning or block a quarantined downloaded copy. No automatic bypass, security-setting change or Gatekeeper disabling is part of the app or installer. Building from the reviewed source remains an option.
 
 A ZIP contains MakerGlance.app. A DMG contains the same app, an Applications shortcut, the MIT license and these notes. Copy the app to your chosen Applications folder. Updating the existing app preserves its legacy bundle identity, local library and Keychain session. Quit the old app before replacing it.
 

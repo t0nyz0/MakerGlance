@@ -1,36 +1,31 @@
-# Public source preparation
+# Release readiness
 
-The owner has authorized source cleanup and validation, and has reserved final approval for any public publication. The existing GitHub repository remains private.
+## MakerGlance 3.9.4, build 30
 
-## Publication boundary
+The owner authorized publishing this GitHub Release with the Apple Silicon ZIP, DMG, checksums and release notes on November 7, 2026, after being informed that the app is ad-hoc signed and not notarized by Apple.
 
-The existing private repository contains historical personal email metadata and machine paths. A normal visibility flip would expose that history. A force-push alone cannot establish that GitHub has removed cached old commits. The publication candidate is therefore a fresh local repository containing the reviewed current files, one new root commit and GitHub noreply authorship. It has no original Git objects, remote, historical branches or tags.
+The application source was verified at commit `7fc5e382e70742b6e76c318bb86b267f5b9fdd36`. Release documentation may advance the release tag without changing the tested executable. The build manifest records the release source commit and binary provenance. Package regeneration updates the embedded download notes and checksums while preserving the verified application bytes.
 
-After the owner's final approval, preserve the original repository as the private `t0nyz0/MakerGlance-private-archive` and import only the clean candidate into a fresh repository at `t0nyz0/MakerGlance`. The archive rename and public repository creation are part of that final approval, not this preparation. Do not flip the original private archive to public or force-push the clean snapshot over its history.
+## Validation
 
-This preparation does not rename repositories, create a public repository, change visibility or upload release binaries.
+- 185 Swift tests, including 21 inbox regressions also run independently.
+- Eight repository-tool tests, current-tree/history privacy guards and documentation checks.
+- 48 isolated native checks using fictional data without network or Keychain access.
+- Optimized Apple Silicon build, exact bundle inventory, signature and machine-path checks.
+- Extracted ZIP and read-only DMG content verification, executable equality and asset checksums.
+- Installed version/build and executable verified; application reopened and the live subscriber description checked through its existing authorized session.
+- Local repair/reingest checks preserve event IDs, read state, dismissals and seen-ID baselines without replaying historical alerts.
 
-## Source checks
+See [local source validation](LOCAL_VALIDATION.json), [release notes](RELEASE_NOTES_3.9.4.md) and [verified inbox schemas](INBOX_EVENT_SCHEMAS.md). Local evidence is not a hosted CI result.
 
-- Version 3.9.2, build 27 preserves the existing bundle, library and Keychain identities.
-- The full Swift suite, repository-check tests, source guard, documentation links/metadata, presentation structure, demo GIF checks, optimized build and bundle verification are recorded in the current validation evidence.
-- Public fixtures use fictional makers, models and balances. Documentation artwork is original project artwork.
-- New untracked files are included in the source/privacy guard. Publication copies only reviewed, nonignored files and rejects symlinks and sensitive artifacts.
-- The history-free candidate is rescanned after committing. Original private history, local libraries, credentials, diagnostic output, build folders and backup bundles are excluded.
-- The public workflow stays manual and uses a verified immutable checkout pin with read-only repository permissions. A separate private-only preflight passed the same source checks, all 157 Swift tests, eight repository-tool tests, the optimized build and 48 native GUI checks.
+## Distribution limits
 
-## GitHub checks
+The downloads target Apple Silicon and macOS 14 or later. Intel is not included. The oldest supported macOS target and a quarantined downloaded launch have not been exercised.
 
-The private repository had zero existing Actions runs, zero published releases, one main branch and no public forks at review time. No old workflow logs or release assets needed removal. GitHub's private vulnerability-reporting form is a public-repository feature. SECURITY.md documents that form and a safe contact-request fallback; enable and verify the private form as part of the owner-approved publication action.
+The app is locally ad-hoc signed, not Developer ID signed or notarized by Apple. macOS may display a developer warning or block a quarantined download. No security-setting change or Gatekeeper bypass is part of the release. [Download and installation notes](DOWNLOADS.md).
 
-## App distribution
+The local packaging script creates ZIP/DMG assets, checksums and a manifest; it does not publish. The separate owner-authorized GitHub Release step uploads the reviewed files and is followed by anonymous public download verification. No repository visibility change is needed.
 
-This approval concerns source publication. Downloadable app releases still need a separate distribution decision. Local builds are Apple Silicon, ad-hoc signed and not notarized. Intel, the oldest supported macOS target and a quarantined downloaded install have not been verified. No financial actions, new account permissions or security-setting changes are part of this preparation.
+## Source-history boundary
 
-See [local source validation](LOCAL_VALIDATION.json), [3.9.2 changes](RELEASE_NOTES_3.9.2.md), [security review](SECURITY_REVIEW.md) and [security reporting](../SECURITY.md).
-
-## Current outcome
-
-Source preparation is complete for version 3.9.2, build 27. The final source snapshot is a new local repository with one noreply-authored root commit, a matching file manifest and clean current-tree/history scans. It has no remote configured. The private GitHub validation run passed; final publication approval remains outstanding.
-
-After publication, continue development from the clean repository. Never force-push the archived clone or its original refs into the public repository.
+The clean public source repository was established in November 2026. Original development history remains in the private archive. Continue from the clean public repository; never force-push the archived clone or its original refs into the public repository. Private libraries, credentials, account payloads, build caches, diagnostic images and backup bundles stay outside published source and release assets.
