@@ -550,7 +550,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         notificationStatus = switch s.authorizationStatus { case .authorized, .provisional: "Allowed"; case .denied: "Disabled in System Settings"; default: "Not enabled" }
     }
     private func notify(_ events: [Activity]) async {
-        let events = events.filter { event in
+        let events = ActivityAlerts.pending(events, in: state).filter { event in
             guard !(state.dismissedActivityIDs ?? []).contains(event.id) else { return false }
             if let kind = event.presentation?.kind,
                !(state.account?.preferences.eventNotifications.contains(kind) ?? AccountPreferences().eventNotifications.contains(kind)) { return false }
