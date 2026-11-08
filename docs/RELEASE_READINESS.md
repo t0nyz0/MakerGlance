@@ -8,7 +8,9 @@ Authorized live checks verified authentication/profile ownership, all three read
 
 Current validation passes 243 unit tests, 58 independently rerun DM regressions, optimized build/signature verification and the repository/documentation checks. Live service validation and direct native UI checks of the DM switch/layout also pass.
 
-**The native automation gate is still open.** Three isolated runs stopped at different existing control assertions: My Prints menu readiness, dashboard sort-basis ordering and return-to-Today binding. Bounded readiness waits and window activation were added without removing assertions; the final run still failed. Direct native input passed selected dashboard and My Prints controls, but does not establish the complete narrow-window/text-size matrix. The cause is unproven. Do not treat this source as having a fully passing native suite or as ready for distribution until that gate is resolved.
+Validation for this notification update is scoped to direct-message parsing, authentication, history completeness, duplicate alerts, local read/dismissed state, credential privacy and the focused native DM controls. Those checks pass. No further unrelated native-matrix investigation is required for this scoped handoff.
+
+The broader native automation was inconsistent: release runs stopped at My Prints/menu and dashboard pointer assertions, while the focused native controls worked through actual native input. A subsequent instrumented debug run completed all 50 checks. This does not certify the full release layout/text-size matrix or establish the cause of the earlier failures. It remains a residual testing limitation; no DM-related product regression was identified.
 
 3.9.5 has not been installed or packaged/published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Installation/reopen checks and package/public-download verification remain separate release steps.
 
