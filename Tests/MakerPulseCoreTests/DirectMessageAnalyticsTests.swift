@@ -215,4 +215,19 @@ final class DirectMessageAnalyticsTests: XCTestCase {
         XCTAssertFalse(restored.account!.preferences.allowsDirectMessageAlerts)
         XCTAssertEqual(restored.account?.directMessages, state.account?.directMessages)
     }
+    func testDirectMessagePreferencePersistsAcrossSQLiteRestart() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("dm-preference-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let url = folder.appendingPathComponent("analytics.sqlite")
+        var state = library(); state.account = AccountState()
+        state.account?.preferences.directMessageNotifications = false
+        let store = try Storage(url: url); try await store.commit(state)
+        let reopened = try Storage(url: url)
+        let disabled = try await reopened.load()
+        XCTAssertFalse(try XCTUnwrap(disabled.account).preferences.allowsDirectMessageAlerts)
+        state.account?.preferences.directMessageNotifications = true
+        try await reopened.commit(state)
+        let enabled = try await store.load()
+        XCTAssertTrue(try XCTUnwrap(enabled.account).preferences.allowsDirectMessageAlerts)
+    }
 }

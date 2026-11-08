@@ -6,6 +6,10 @@ Direct-message support is implemented against the verified deployed REST contrac
 
 Authorized live checks verified authentication/profile ownership, all three read-only endpoints and unchanged remote read watermarks. Private payloads and credentials are absent from source, fixtures and reports. Current source validation is for 3.9.5; the published 3.9.4 tag and build manifest retain the release evidence below.
 
+Current validation passes 243 unit tests, 58 independently rerun DM regressions, optimized build/signature verification and the repository/documentation checks. Live service validation and direct native UI checks of the DM switch/layout also pass.
+
+**The native automation gate is still open.** Three isolated runs stopped at different existing control assertions: My Prints menu readiness, dashboard sort-basis ordering and return-to-Today binding. Bounded readiness waits and window activation were added without removing assertions; the final run still failed. Direct native input passed selected dashboard and My Prints controls, but does not establish the complete narrow-window/text-size matrix. The cause is unproven. Do not treat this source as having a fully passing native suite or as ready for distribution until that gate is resolved.
+
 3.9.5 has not been installed or packaged/published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Installation/reopen checks and package/public-download verification remain separate release steps.
 
 ## MakerGlance 3.9.4, build 30
