@@ -116,7 +116,7 @@ All models, including newly discovered ones, start watched. Models has working A
 
 A valid session can load exposed comments, replies, mentions and other supported account activity, points, wallet observations and Creator Center reports. Marking activity read changes this app's local state only.
 
-The 3.9.5 development source adds **Direct messages** in Settings with a separate connection and alert switch. Connecting may sign another MakerWorld chat client out. Message bodies and sender names are not saved or included in alerts; the first sync stays quiet and expired chat connections require an explicit reconnect. [Details and limits](docs/DIRECT_MESSAGES.md). The currently published download below is 3.9.4.
+MakerGlance 3.9.5 adds **Direct messages** in Settings with a separate connection and alert switch. Connecting may sign another MakerWorld chat client out. Message bodies and sender names are not saved or included in alerts; the first sync stays quiet and expired chat connections require an explicit reconnect. [Details and limits](docs/DIRECT_MESSAGES.md).
 
 Regular points, exclusive points, the server cash-redemption estimate, ready-to-transfer wallet cash and pending income stay distinct, preserving currency and decimal precision. Point activity shows supplied incentive reasons, model context and boost donors where exposed. Balance changes are reconciled with supporting ledger entries; ambiguous or delayed details remain pending rather than guessed. There are no redemption, withdrawal or transfer actions.
 
@@ -129,7 +129,7 @@ Requests use bounded pagination, deduplication, pacing and transient backoff. In
 
 ## Build & try it
 
-[Download MakerGlance 3.9.4](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.4) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**; macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
+[Download MakerGlance 3.9.5](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.5) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**; macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
 
 ```sh
 git clone https://github.com/t0nyz0/MakerGlance.git

@@ -1,8 +1,8 @@
 # Release readiness
 
-## Unreleased MakerGlance 3.9.5, build 31
+## MakerGlance 3.9.5, build 31
 
-Direct-message support is implemented against the verified deployed REST contract, with metadata-only storage and alerts, explicit connection, separate Keychain storage, quiet baselines, sequence deduplication, token-expiry handling and transactional protection against stale saves. See [DM contract](DIRECT_MESSAGES.md), [draft release notes](RELEASE_NOTES_3.9.5.md) and [current local source validation](LOCAL_VALIDATION.json).
+Direct-message support is implemented against the verified deployed REST contract, with metadata-only storage and alerts, explicit connection, separate Keychain storage, quiet baselines, sequence deduplication, token-expiry handling and transactional protection against stale saves. See [DM contract](DIRECT_MESSAGES.md), [release notes](RELEASE_NOTES_3.9.5.md) and [current local source validation](LOCAL_VALIDATION.json).
 
 Authorized live checks verified authentication/profile ownership, all three read-only endpoints and unchanged remote read watermarks. Private payloads and credentials are absent from source, fixtures and reports. Current source validation is for 3.9.5; the published 3.9.4 tag and build manifest retain the release evidence below.
 
@@ -14,7 +14,7 @@ The broader native automation was inconsistent: release runs stopped at My Print
 
 3.9.5 build 31 was installed and reopened with owner authorization. The installed executable matches the verified optimized build and passes strict signature verification. The existing Bambu session restored, the direct-message connection completed through Settings, and a live check persisted a quiet conversation baseline. Existing Activity identities/read state, dismissals, seen IDs, preferences and watch rules were preserved. No new unread message was available during the live checks, so a real new-message desktop alert remains unobserved; automated incoming-message and alert regressions pass.
 
-3.9.5 has not been packaged or published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Package/public-download verification remains a separate release step requiring release authorization.
+The owner authorized packaging, pushing and publishing 3.9.5 on November 8, 2026, with the existing signing disclosures and live-banner limitation. The release workflow packages the verified executable, records its binary provenance separately from documentation-only commits, and verifies the ZIP, read-only DMG contents, checksums and anonymous public downloads. Local build and installation evidence is retained separately from published source and assets.
 
 ## MakerGlance 3.9.4, build 30
 

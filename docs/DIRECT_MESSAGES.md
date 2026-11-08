@@ -1,6 +1,6 @@
 # MakerWorld direct-message integration
 
-Implemented in the unreleased 3.9.5/build 31 source. The publicly downloadable 3.9.4 app does not contain this feature. Local installation and release packaging are separate steps.
+Available in MakerGlance 3.9.5/build 31. Direct messages require a separate explicit connection in Settings; upgrading alone does not create a chat credential.
 
 ## Why direct messages were missing
 
