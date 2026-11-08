@@ -62,6 +62,13 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     var myPrints: PrintHistory? { state.printHistory?.accountID == state.preferences.userID ? state.printHistory : nil }
     @Published var privateSyncing = false
     @Published var inboxStatus = "Connect a Bambu session in Settings to load the private inbox."
+    @Published var directMessagesStatus = "Connect direct messages in Settings to check for new messages."
+    @Published var directMessagesConnected = false
+    @Published var connectingDirectMessages = false
+    private var directMessagesSyncing = false
+    private var directMessageCredential: DirectMessageCredential?
+    private var directMessageGeneration = 0
+    private let directMessageAPI = DirectMessageService()
     @Published var rewardsStatus = "Connect a Bambu session in Settings to load private balances."
     @Published var walletStatus = "Wallet data has not been verified."
     @Published var balanceHistory: [BalanceSample] = []
@@ -83,7 +90,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     private var scheduledRefreshQueued = false
     var unread: Int { state.activity.filter { !$0.isRead }.count }
     var watching: Int { ModelWatchFilter.watched.count(state.models, watches: state.watches) }
-    var isRefreshing: Bool { syncing || privateSyncing || printsLoading }
+    var isRefreshing: Bool { syncing || privateSyncing || printsLoading || connectingDirectMessages || directMessagesSyncing }
     var menuStatus: MenuStatus { MenuStatus(unread: unread, refreshing: isRefreshing || restoringSession, attention: !issues.isEmpty || !privateIssues.isEmpty) }
     func showMain(_ section: Destination = .overview, modelID: String? = nil) {
         destination = section
@@ -230,6 +237,16 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
                     authenticationStatus = "Your saved session is available. Private feeds refresh in the background."
                 }
             } catch { connection = "Public API · Keychain unavailable"; privateIssues.append("Saved session unavailable: \(error.localizedDescription)") }
+            if accountSessionAvailable {
+                do {
+                    if let saved = try await Task.detached(priority: .userInitiated, operation: { try DirectMessageKeychain.read() }).value {
+                        if saved.profileID == state.preferences.userID, saved.expiresAt > Date() {
+                            directMessageCredential = saved; directMessagesConnected = true
+                            directMessagesStatus = "Saved direct-message connection available."
+                        } else { directMessagesStatus = "Reconnect direct messages in Settings. Saved activity is preserved." }
+                    }
+                } catch { directMessagesStatus = error.localizedDescription }
+            }
             restoringSession = false
             if !accountSessionAvailable { if privateIssues.isEmpty { connection = "Public API" }; authenticationStatus = privateIssues.first ?? "No saved session is available. Connect below to refresh private data." }
             await publicRefresh.value
@@ -260,7 +277,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     func refresh(forceFollowers: Bool = true, forceLedgers: Bool = false) async {
         ImageRefresh.shared.retry()
         if isDemo { status = "Offline demo · fictional observations"; return }
-        guard !syncing, !privateSyncing, !printsLoading, !state.preferences.userID.isEmpty, let storage else { return }
+        guard !syncing, !privateSyncing, !printsLoading, !connectingDirectMessages, !state.preferences.userID.isEmpty, let storage else { return }
         syncing = true; issues = []; defer { syncing = false }
         let userID = state.preferences.userID
         var freshEvents: [Activity] = []
@@ -354,6 +371,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
             liveInbox = true
             inboxStatus = "Private inbox synced. Read status is local to MakerGlance."
         } catch { inboxStatus = error.localizedDescription; privateIssues.append("Inbox: \(error.localizedDescription)") }
+        alerts += await refreshDirectMessages()
         rewardsStatus = "Loading points and cash estimate…"
         do {
             var balance = try await api.pointsBalance()
@@ -428,6 +446,75 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         if enabled { account.preferences.balanceNotifications.insert(metric) } else { account.preferences.balanceNotifications.remove(metric) }
         state.account = account; save()
     }
+    func setDirectMessageNotifications(_ enabled: Bool) {
+        var account = state.account ?? AccountState()
+        account.preferences.directMessageNotifications = enabled
+        state.account = account; save()
+    }
+
+    func connectDirectMessages() async {
+        guard !isDemo, !isolatedQA, !isRefreshing, accountSessionAvailable else { return }
+        connectingDirectMessages = true; directMessageGeneration += 1
+        directMessageCredential = nil; directMessagesConnected = false
+        let generation = directMessageGeneration
+        defer { connectingDirectMessages = false }
+        directMessagesStatus = "Connecting direct messages… Complete any normal macOS Keychain prompt."
+        do {
+            let session = try await api.authorizeDirectMessages(using: directMessageAPI, profileID: state.preferences.userID)
+            guard generation == directMessageGeneration else { return }
+            try await Task.detached(priority: .userInitiated) { try DirectMessageKeychain.save(session) }.value
+            guard generation == directMessageGeneration else {
+                try? await Task.detached(priority: .userInitiated) { try DirectMessageKeychain.delete() }.value
+                return
+            }
+            directMessageCredential = session; directMessagesConnected = true
+            let alerts = await refreshDirectMessages()
+            await notify(alerts)
+        } catch {
+            if generation == directMessageGeneration { directMessagesStatus = "Direct messages could not connect: " + error.localizedDescription }
+        }
+        await writeConnectionDiagnostics()
+    }
+
+    @discardableResult private func refreshDirectMessages() async -> [Activity] {
+        guard !isDemo, !isolatedQA, !directMessagesSyncing, let session = directMessageCredential, let storage else { return [] }
+        guard session.expiresAt > Date() else {
+            directMessageCredential = nil; directMessagesConnected = false
+            directMessagesStatus = "Direct-message connection expired. Reconnect in Settings; saved activity is preserved."
+            return []
+        }
+        directMessagesSyncing = true; defer { directMessagesSyncing = false }
+        let generation = directMessageGeneration
+        directMessagesStatus = "Checking direct messages…"
+        do {
+            let date = Date()
+            let batch = try await directMessageAPI.snapshot(session: session, known: state.account?.directMessages, at: date)
+            guard generation == directMessageGeneration else { return [] }
+            var next = state, account = next.account ?? AccountState(), metadata = next.account?.directMessages
+            let alerts = try DirectMessageAnalytics.ingest(batch, profileID: state.preferences.userID, metadata: &metadata, into: &next,
+                at: date, notificationsEnabled: account.preferences.allowsDirectMessageAlerts)
+            account.directMessages = metadata; next.account = account
+            try Task.checkCancellation()
+            try await storage.commit(next); acceptObservation(next)
+            guard generation == directMessageGeneration else { return [] }
+            directMessagesStatus = "Direct messages checked. Read status stays local; message bodies are not stored."
+            return alerts
+        } catch {
+            guard generation == directMessageGeneration else { return [] }
+            if error as? DirectMessageServiceError == .authentication {
+                directMessageCredential = nil; directMessagesConnected = false
+            }
+            directMessagesStatus = "Direct messages could not refresh: " + error.localizedDescription
+            privateIssues.append(directMessagesStatus); return []
+        }
+    }
+
+    func disconnectDirectMessages() {
+        guard !isDemo, !isolatedQA else { return }
+        directMessageGeneration += 1; directMessageCredential = nil; directMessagesConnected = false
+        do { try DirectMessageKeychain.delete(); directMessagesStatus = "Direct-message connection removed. Saved activity is preserved." }
+        catch { directMessagesStatus = error.localizedDescription }
+    }
     func delta(for model: Design, metric: Metric = .likes) -> Int? {
         let samples = histories["model:\(model.id)"] ?? []
         guard samples.count >= 2 else { return nil }
@@ -457,6 +544,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     func auditStoredWatches() async throws -> [String: WatchRule] {
         guard isolatedQA, let storage else { throw PulseError.incomplete("isolated watch persistence verification") }
         return try await storage.load().watches
+    }
+    func auditStoredDirectMessagePreference() async throws -> Bool? {
+        guard isolatedQA, let storage else { throw PulseError.incomplete("isolated direct-message preference verification") }
+        return try await storage.load().account?.preferences.directMessageNotifications
     }
     func auditStoredTextSize() async throws -> Int {
         guard isolatedQA, let storage else { throw PulseError.incomplete("isolated text size verification") }
@@ -552,6 +643,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     private func notify(_ events: [Activity]) async {
         let events = ActivityAlerts.pending(events, in: state).filter { event in
             guard !(state.dismissedActivityIDs ?? []).contains(event.id) else { return false }
+            if event.id.hasPrefix("direct:") {
+                return (directMessageCredential?.expiresAt ?? .distantPast) > Date()
+                    && (state.account?.preferences.allowsDirectMessageAlerts ?? true)
+            }
             if let kind = event.presentation?.kind,
                !(state.account?.preferences.eventNotifications.contains(kind) ?? AccountPreferences().eventNotifications.contains(kind)) { return false }
             if event.id.hasPrefix("balance:") { return true }
@@ -603,7 +698,9 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         let report: [String: Any] = ["version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Dev",
             "rewardReasonParserVerified": state.account?.transactions.allSatisfy { $0.parserVersion == RewardLedger.version } == true,
             "rewardReasonVersion": state.account?.ledgerReasonVersion ?? 0, "sessionAvailable": accountSessionAvailable, "connection": connection, "authenticationStatus": authenticationStatus,
-            "inboxStatus": inboxStatus, "rewardsStatus": rewardsStatus, "walletStatus": walletStatus, "schemas": await api.schemaDiagnostics,
+            "inboxStatus": inboxStatus, "directMessagesConnected": directMessagesConnected, "directMessagesStatus": directMessagesStatus,
+            "directMessagesVerified": state.account?.directMessages?.lastSync != nil,
+            "rewardsStatus": rewardsStatus, "walletStatus": walletStatus, "schemas": await api.schemaDiagnostics,
             "inboxVerified": state.account?.lastEventSync != nil, "rewardsVerified": state.account?.balance != nil, "ledgerVerified": state.account?.transactionsImported == true,
             "creatorStatus": creatorStatus, "creatorVerified": state.creatorReport != nil, "creatorDailyVerified": !(state.creatorReport?.history?.isEmpty ?? true), "walletLedgerVerified": state.account?.lastWalletSync != nil,
             "myPrintsVerifiedThisRun": livePrintHistory, "myPrintsSaved": myPrints?.jobs.count ?? 0, "privateFeedsVerifiedThisRun": ["inbox": liveInbox, "rewards": liveRewards, "pointsLedger": livePointsLedger, "walletLedger": liveWalletLedger, "creator": liveCreator, "creatorDaily": liveCreatorDaily, "creatorProfiles": liveCreatorProfiles, "creatorProfilesDaily": liveCreatorProfilesDaily]]
@@ -614,7 +711,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         }
     }
     func disconnect() {
-        do { try SessionKeychain.delete(); Task { await api.useSession(nil) }; connection = "Public API"; accountSessionAvailable = false; inboxStatus = "Connect in Settings to refresh the private inbox."; rewardsStatus = "Connect in Settings to refresh private balances." }
+        do { try SessionKeychain.delete(); disconnectDirectMessages(); Task { await api.useSession(nil) }; connection = "Public API"; accountSessionAvailable = false; inboxStatus = "Connect in Settings to refresh the private inbox."; rewardsStatus = "Connect in Settings to refresh private balances." }
         catch { issues.append(error.localizedDescription) }
     }
 
@@ -720,6 +817,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
                     try preview(FreshPillAuditView().environmentObject(self).preferredColorScheme(scheme), name: "fresh-pills-\(scheme == .dark ? "dark" : "light")", size: NSSize(width: 750, height: 470))
                 }
                 if name == "creator-light" { scroll(430); try await Task.sleep(for: .milliseconds(300)); try snapshot("creator-history-light"); scroll(0) }
+                if section == .settings {
+                    scroll(1500); try await Task.sleep(for: .milliseconds(300))
+                    try snapshot("settings-direct-messages-\(scheme == .dark ? "dark" : "light")"); scroll(0)
+                }
             }
             var mainFilterClicks = false
             var dashboardWindowClicks = false

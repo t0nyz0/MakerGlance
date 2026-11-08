@@ -21,7 +21,13 @@ import MakerPulseCore
             return node.subviews.compactMap{find(type,id,$0)}.first
         }
         func choose(_ id:String,_ title:String) async throws {
-            guard let control=find(NSPopUpButton.self,id,view),let action=control.action,control.itemTitles.contains(title) else{throw PulseError.incomplete("native My Prints menu")}
+            var ready:NSPopUpButton?
+            for _ in 0..<40 {
+                view.layoutSubtreeIfNeeded()
+                if let control=find(NSPopUpButton.self,id,view),control.action != nil,control.itemTitles.contains(title) { ready=control;break }
+                try await Task.sleep(for:.milliseconds(50))
+            }
+            guard let control=ready,let action=control.action else{throw PulseError.incomplete("native My Prints menu \(id)")}
             control.selectItem(withTitle:title);guard control.sendAction(action,to:control.target) else{throw PulseError.incomplete("My Prints native action")}
             try await Task.sleep(for:.milliseconds(100))
         }

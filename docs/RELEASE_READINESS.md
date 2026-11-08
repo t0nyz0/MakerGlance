@@ -1,5 +1,13 @@
 # Release readiness
 
+## Unreleased MakerGlance 3.9.5, build 31
+
+Direct-message support is implemented against the verified deployed REST contract, with metadata-only storage and alerts, explicit connection, separate Keychain storage, quiet baselines, sequence deduplication, token-expiry handling and transactional protection against stale saves. See [DM contract](DIRECT_MESSAGES.md), [draft release notes](RELEASE_NOTES_3.9.5.md) and [current local source validation](LOCAL_VALIDATION.json).
+
+Authorized live checks verified authentication/profile ownership, all three read-only endpoints and unchanged remote read watermarks. Private payloads and credentials are absent from source, fixtures and reports. Current source validation is for 3.9.5; the published 3.9.4 tag and build manifest retain the release evidence below.
+
+3.9.5 has not been installed or packaged/published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Installation/reopen checks and package/public-download verification remain separate release steps.
+
 ## MakerGlance 3.9.4, build 30
 
 The owner authorized publishing this GitHub Release with the Apple Silicon ZIP, DMG, checksums and release notes on November 7, 2026, after being informed that the app is ad-hoc signed and not notarized by Apple.

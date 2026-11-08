@@ -104,6 +104,27 @@ struct PreferencesView: View {
                     }.disabled(authenticating || model.restoringSession || model.isDemo)
                 }
                 Surface {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Label("Direct messages", systemImage: "bubble.left.and.bubble.right").appFont(.headline)
+                        Text(model.isDemo ? "Offline demo · no chat connection" : model.directMessagesStatus).appFont(size: 12).foregroundStyle(Palette.secondaryText)
+                        Text("Connecting may sign another MakerWorld chat session out. Message bodies are not saved or included in alerts.").appFont(size: 12).foregroundStyle(Palette.secondaryText)
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Button(model.directMessagesConnected ? "Reconnect direct messages" : "Connect direct messages") { Task { await model.connectDirectMessages() } }
+                                    .disabled(!model.accountSessionAvailable || model.isRefreshing || model.restoringSession || model.isDemo || model.isolatedQA)
+                                if model.connectingDirectMessages { ProgressView().controlSize(.small) }
+                            }
+                            if model.directMessagesConnected {
+                                Button("Remove direct-message connection", role: .destructive) { model.disconnectDirectMessages() }
+                            }
+                            Link("Open MakerWorld messages ↗", destination: URL(string: "https://makerworld.com/en/my/message")!)
+                        }
+                        Toggle("Send direct-message alerts", isOn: Binding(get: { model.state.account?.preferences.allowsDirectMessageAlerts ?? true }, set: { model.setDirectMessageNotifications($0) }))
+                            .toggleStyle(.checkbox)
+                        Text("New incoming messages appear in Activity when checked. The first sync stays quiet. Read and dismissed status stay local; turning alerts back on does not replay old messages. An expired connection requires reconnecting here.").appFont(size: 12).foregroundStyle(Palette.secondaryText)
+                    }
+                }
+                Surface {
                     VStack(alignment: .leading, spacing: 16) {
                         Label("Activity & inbox notifications", systemImage: "tray").appFont(.headline)
                         Text("Choose which events appear in Activity and send alerts. Printer/device updates are off by default. These preferences are local. MakerGlance never marks notifications read or changes notification settings on MakerWorld.").appFont(size: 12).foregroundStyle(Palette.secondaryText)

@@ -10,6 +10,10 @@ Requests needed to fetch data go to `api.bambulab.com` and `makerworld.com`. Mod
 
 The email-code/MFA and manual own-session flows are user initiated. A session is validated against the selected creator before it is activated. No password is retained. The saved session uses macOS Keychain with the legacy service `com.t0nyz0.MakerPulse`, account `bambu-session`, and when-unlocked/device-only accessibility for newly created items.
 
+Direct messages use a separate, explicitly requested chat credential in the same Keychain service under account `makerworld-direct-messages-v1`. Connecting can sign another MakerWorld chat client out. Startup and polling reuse the saved credential and never silently create or renew it. HTTP token errors or expiry require an explicit reconnect. Removing the direct-message connection deletes this separate item while retaining local Activity.
+
+Read-only history responses pass through transient memory; whitelist decoding discards message bodies, attachments, names and participant IDs. Local DM history contains generic Activity rows, hashed identities, timestamps and sequence watermarks. Desktop alerts contain no message text or sender name. No remote messages are marked read. [Integration details](DIRECT_MESSAGES.md).
+
 Tokens are not written to the analytics database, repository, screenshot fixtures or diagnostic arguments. The app's API transport has no shared cookie or credential store. It uses normal system TLS validation and blocks redirects across origins, including port changes or HTTPS downgrades. Locally signed updates may require a macOS Keychain decision; no prompt should be accepted blindly.
 
 ## Files on this Mac
@@ -28,7 +32,7 @@ The database is **not encrypted by MakerGlance**. macOS user access controls and
 
 ## Remove or export data deliberately
 
-Remove the saved session through Settings to delete the app's Keychain item. Quit the app before backing up or removing its support directory; include SQLite sidecars in a consistent backup. Removing a session does not delete saved analytics. Removing the database does not itself remove a saved Keychain item or thumbnail caches. The app does not currently provide a full data-export or account-switch migration flow.
+Remove the saved session through Settings to delete the app's Bambu and direct-message Keychain items. Quit the app before backing up or removing its support directory; include SQLite sidecars in a consistent backup. Removing a session does not delete saved analytics. Removing the database does not itself remove a saved Keychain item or thumbnail caches. The app does not currently provide a full data-export or account-switch migration flow.
 
 ## Demo and documentation
 

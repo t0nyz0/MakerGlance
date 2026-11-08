@@ -104,6 +104,8 @@ public struct RewardTransaction: Codable, Identifiable, Sendable, Equatable {
 public struct AccountPreferences: Codable, Sendable, Equatable {
     public var eventNotifications: Set<EventKind> = [.comment, .reply, .mention, .model, .system]
     public var balanceNotifications: Set<RewardMetric> = [.exclusivePoints, .cashEstimate, .cashAvailable, .cashPending]
+    public var directMessageNotifications: Bool?
+    public var allowsDirectMessageAlerts: Bool { directMessageNotifications ?? true }
     public init() {}
 }
 public struct AccountState: Codable, Sendable {
@@ -123,6 +125,7 @@ public struct AccountState: Codable, Sendable {
     public var lastWalletSync: Date?
     public var rewardChanges: [RewardChange]?
     public var ledgerReasonVersion: Int?
+    public var directMessages: DirectMessageState?
     public init() {}
 }
 

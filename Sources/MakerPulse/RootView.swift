@@ -98,7 +98,7 @@ struct ActivityView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 22) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 7) { Text("Activity").appFont(size: 32, weight: .semibold); Text("Milestones, new followers, and changes you chose to watch.").foregroundStyle(Palette.secondaryText) }
+                    VStack(alignment: .leading, spacing: 7) { Text("Activity").appFont(size: 32, weight: .semibold); Text("Milestones, new followers, and supported MakerWorld updates.").foregroundStyle(Palette.secondaryText) }
                     Spacer()
                     Toggle("Unread only", isOn: $unreadOnly).toggleStyle(.switch).controlSize(.small)
                     Button("Mark all read") { model.markAllRead() }.disabled(model.unread == 0)
@@ -109,7 +109,8 @@ struct ActivityView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack { Label("MakerWorld account inbox", systemImage: "tray").appFont(.headline); Spacer(); if model.privateSyncing { ProgressView().controlSize(.small) }; Button("Connection settings") { model.destination = .settings }.buttonStyle(.plain).foregroundStyle(Palette.accent) }
                         Text(model.inboxStatus).appFont(size: 12).foregroundStyle(Palette.secondaryText)
-                        Text("Comments, replies, mentions and model events are fetched read-only. Mark all read affects only this app. Initial account imports are quiet; event IDs are remembered across restarts.").appFont(size: 12).foregroundStyle(Palette.secondaryText)
+                        Text(model.directMessagesStatus).appFont(size: 12).foregroundStyle(Palette.secondaryText)
+                        Text("Comments, replies, mentions and model events are fetched read-only. Direct messages use the separate connection in Settings. Mark all read affects only this app. Initial imports are quiet; event IDs are remembered across restarts.").appFont(size: 12).foregroundStyle(Palette.secondaryText)
                     }
                 }
                 Surface {

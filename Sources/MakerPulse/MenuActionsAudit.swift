@@ -6,6 +6,13 @@ import MakerPulseCore
         guard model.isolatedQA else { throw PulseError.incomplete("isolated menu verification") }
         model.showMain(.settings); try await Task.sleep(for: .milliseconds(250))
         let settings = model.destination == .settings
+        let savedDirectMessagePreference = model.state.account?.preferences.directMessageNotifications
+        model.setDirectMessageNotifications(false); try await Task.sleep(for: .milliseconds(150))
+        let directMessagesOff = try await model.auditStoredDirectMessagePreference() == false
+        model.setDirectMessageNotifications(true); try await Task.sleep(for: .milliseconds(150))
+        let directMessagesOn = try await model.auditStoredDirectMessagePreference() == true
+        model.state.account?.preferences.directMessageNotifications = savedDirectMessagePreference
+        model.save(); try await Task.sleep(for: .milliseconds(150))
         model.showMain(.activity); try await Task.sleep(for: .milliseconds(250))
         let inbox = model.destination == .activity
         let firstID = model.state.models.first?.id
@@ -50,7 +57,8 @@ import MakerPulseCore
         model.setPollingMinutes(10); let short = model.nextRefreshDate
         let rescheduled = long != nil && short != nil && short! < long! && (590...620).contains(short!.timeIntervalSinceNow)
         model.setPollingMinutes(savedMinutes)
-        let report = ["settingsAction": settings, "inboxAction": inbox, "modelDeepLink": modelLink, "openReusesWindow": reused,
+        let report = ["settingsAction": settings, "directMessageAlertsOffPersist": directMessagesOff, "directMessageAlertsOnPersist": directMessagesOn,
+            "inboxAction": inbox, "modelDeepLink": modelLink, "openReusesWindow": reused,
             "appRemainsRunningAfterWindowClose": keepsRunning, "refreshLoadingFeedback": loading, "reopenWhileRefreshResponsive": reopened,
             "refreshCompletes": completed, "dockReopenHandler": dockReopen, "pauseDuringRefreshPersists": pauseSurvives, "pollIntervalReschedulesImmediately": rescheduled,
             "unchangedRefreshPreservesActivityTime": unchangedActivity, "unchangedRefreshDoesNotCreateFreshPills": noFalseFreshness]

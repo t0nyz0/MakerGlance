@@ -4,8 +4,8 @@
 <p align="center">Your MakerWorld creator workspace, at home on the Mac.</p>
 <!-- verified-badges:start -->
 <p align="center">
-<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.4"></a>
-<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 217 passing"></a>
+<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.5"></a>
+<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 242 passing"></a>
 <a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/build.svg" alt="local build: verified"></a>
 <a href="#build--try-it"><img src="docs/media/badges/macos.svg" alt="macOS: 14.0 target"></a>
 <a href="Package.swift"><img src="docs/media/badges/swift.svg" alt="Swift: 6"></a>
@@ -115,6 +115,8 @@ All models, including newly discovered ones, start watched. Models has working A
 <details><summary><strong>Connected account features and notification limits</strong></summary>
 
 A valid session can load exposed comments, replies, mentions and other supported account activity, points, wallet observations and Creator Center reports. Marking activity read changes this app's local state only.
+
+The 3.9.5 development source adds **Direct messages** in Settings with a separate connection and alert switch. Connecting may sign another MakerWorld chat client out. Message bodies and sender names are not saved or included in alerts; the first sync stays quiet and expired chat connections require an explicit reconnect. [Details and limits](docs/DIRECT_MESSAGES.md). The currently published download below is 3.9.4.
 
 Regular points, exclusive points, the server cash-redemption estimate, ready-to-transfer wallet cash and pending income stay distinct, preserving currency and decimal precision. Point activity shows supplied incentive reasons, model context and boost donors where exposed. Balance changes are reconciled with supporting ledger entries; ambiguous or delayed details remain pending rather than guessed. There are no redemption, withdrawal or transfer actions.
 

@@ -10,6 +10,7 @@ public enum ActivityAlerts {
             guard seen.insert(candidate.id).inserted,
                 !(state.dismissedActivityIDs ?? []).contains(candidate.id),
                 let item = current[candidate.id], !item.isRead else { return nil }
+            if item.id.hasPrefix("direct:"), !(state.account?.preferences.allowsDirectMessageAlerts ?? true) { return nil }
             return item
         }
     }

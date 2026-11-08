@@ -1,59 +1,52 @@
-# Direct-message integration investigation
+# MakerWorld direct-message integration
 
-Status: development work, **not connected, installed or released**. Ordinary MakerWorld direct messages are not supported by the released 3.9.4 application. The new standalone parser and analytics have no active API, UI or library-persistence caller. They must remain disconnected until MakerWorld's deployed response and authentication behavior are verified.
+Implemented in the unreleased 3.9.5/build 31 source. The publicly downloadable 3.9.4 app does not contain this feature. Local installation and release packaging are separate steps.
 
-## Confirmed cause
+## Why direct messages were missing
 
-`MakerWorldAPI.accountEvents()` reads only the six `/v1/user-service/my/messages` categories: comments, models, system, device, community and crowdfunding. Ordinary direct messages use a separate OpenIM chat connection in MakerWorld's own client. They cannot be added by assigning another label to an unknown inbox event. Crowdfunding message sessions are also a different service.
+The account inbox reads six categories from `/v1/user-service/my/messages`. Ordinary direct messages use MakerWorld’s separate OpenIM service, so assigning labels to unknown inbox event types cannot make DMs appear.
 
-MakerWorld's public [message-page JavaScript](https://makerworld.com/_next/static/chunks/pages/my/message-0a1218e823f87ee9.js) configures `/v1/im-service/api` and `/v1/im-service/msg`, requests chat authentication with `platformId: 5`, then calls OpenIM login with a user ID, token and platform ID. The conversation list uses `getConversationListSplit`; its latest-message summary contains stable message IDs and unread counts.
+MakerWorld’s public [message-page client](https://makerworld.com/_next/static/chunks/pages/my/message-0a1218e823f87ee9.js) configures `/v1/im-service/api` and `/v1/im-service/msg`. Its public [WASM SDK](https://public-cdn.bblmw.com/im/wasm/openIM.wasm) embeds `github.com/OpenIMSDK/protocol v0.0.14`. The SDK display string alone does not establish an exact server release.
 
-The same client calls `markConversationMessageAsRead` when a conversation is selected and `markMessagesAsReadByMsgID` when messages enter the viewport. Opening the user's unread example in that interface would therefore change remote read state. This investigation did not open or render it.
+Authorized live verification confirmed the native API origin `https://api.bambulab.com`, the authentication wrapper and all three read operations below. An incoming message supplied the expected stable IDs, sender/recipient, type, sequence and millisecond timestamp. Before/after remote read watermarks were identical. No private message body, participant identity or credential was retained in reports or fixtures.
 
-The public [_app JavaScript](https://makerworld.com/_next/static/chunks/pages/_app-115368d5c13c9720.js) resolves the token helper to GET `/my/im/token` under `design-user-service`, giving `/v1/design-user-service/my/im/token?platformId=5` before the website proxy prefix. The chat API host is runtime configuration; the public script alone does not verify an active API origin or deployed HTTP contract.
+## Connection and storage
 
-## Authentication side effect and current blockers
+Connect the existing Bambu session, then choose **Settings → Direct messages → Connect direct messages**. The monitored profile is validated before the explicit platform-4 chat-token request. Connecting may sign another MakerWorld chat client out; the interface explains that effect before connecting. Normal macOS Keychain approval may be required.
 
-Upstream OpenIM [token creation](https://github.com/openimsdk/open-im-server/blob/9502a1a15fe63f6342fb1e2d8068346a82f278d8/pkg/common/storage/controller/auth.go#L88) can invalidate another client token, before any websocket login. Policies at lines 135–264 include same-platform eviction and policies that may evict Web when a PC/native client authenticates. [Websocket login](https://github.com/openimsdk/open-im-server/blob/9502a1a15fe63f6342fb1e2d8068346a82f278d8/internal/msggateway/ws_server.go#L333) has additional eviction handling. Requesting native macOS platform 4 is not proof that the browser session will be preserved. MakerWorld's deployed policy remains unknown.
+Chat credentials are stored separately in Keychain. Polling and startup reuse the saved credential; neither silently requests a fresh token. Expiry, invalidation or a kicked token requires an explicit reconnect. Removing a connection preserves Activity history.
 
-The user has been asked whether a connection test may potentially sign out browser chat. That permission is pending. No IM token was requested, no websocket was opened and no read-marking operation was issued. A no-prompt read of MakerGlance's own Keychain item returned macOS authentication failure (`-25293`); no credential was displayed or exported. Normal Keychain consent may also be required. Browser credential stores must not be used as a workaround.
+History requests necessarily receive transient message response data. Whitelist decoding discards content, names, attachments, participant IDs and other unused fields. SQLite stores generic Activity rows, hashed identities, timestamps and sequence watermarks. Alerts contain no message text or sender name. Opening a desktop notification opens local Activity; the user can choose to open MakerWorld messages from Settings.
 
-## Prepared implementation
+## Verified read-only contract
 
-`DirectMessage.swift` implements a strict, metadata-only parser for the public upstream OpenIM sorted-conversation response. It discards participant IDs after direction classification and never retains names, message bodies, attachment URLs, credentials or raw payloads. Error strings are fixed and contain no response values. The [upstream protocol](https://github.com/openimsdk/protocol/blob/1a91e17bd182dd97e0229c0798f5428dfa2cd2ed/conversation/conversation.proto#L62) supplies the fields; this is not a captured MakerWorld response.
+| Operation | JSON request | Relevant response |
+| --- | --- | --- |
+| GET `/v1/design-user-service/my/im/token?platformId=4` | Existing validated Bambu bearer session; explicit connection only | `userId`, `token`, `expireIn` |
+| POST `/v1/im-service/api/conversation/get_all_conversations` | `ownerUserID` | `data.conversations` with owner, peer, type, receive option and visibility fences |
+| POST `/v1/im-service/api/msg/get_conversations_has_read_and_max_seq` | `userID`, `conversationIDs` | `data.seqs` containing numeric `maxSeq` and `hasReadSeq` |
+| POST `/v1/im-service/api/msg/pull_msg_by_seq` | `userID`, `seqRanges[{conversationID,begin,end,num}]`, `order:0` | `data.msgs[conversationID].Msgs` and Boolean `isEnd` |
 
-`DirectMessageAnalytics.swift` prepares:
+IM queries carry `token` and `operationID` headers, without the Bambu bearer credential. They use the existing ephemeral HTTPS transport and same-origin redirect restrictions. No websocket, chat SDK dependency, send, mark-read or remote preference operation is used.
 
-- Strict full pagination with stable totals, unique conversations, aggregate unread reconciliation, bounded page counts and cancellation propagation. Incomplete snapshots cannot establish a baseline.
-- A quiet initial snapshot. Currently unread incoming direct messages can appear locally without replaying desktop alerts.
-- Conversation-scoped client/server identity aliases and timestamp watermarks. Stored identity keys are hashes. Sparse older/equal-time observations do not establish competing canonical identities; an explicit later alias bridge can enrich the original identity.
-- Filtering of outgoing, group/system, read, typing, recall and unsupported content types. Remote muted conversations do not create desktop alerts. Only verified user-message types 101–105 are eligible.
-- Atomic staging before mutation, account isolation and preservation of existing local read/dismissed entries. Re-enabling notifications cannot replay already consumed observations.
+Exact protocol fields appear in [conversation.proto](https://github.com/openimsdk/protocol/blob/v0.0.14/conversation/conversation.proto#L20), [sequence metadata](https://github.com/openimsdk/protocol/blob/v0.0.14/msg/msg.proto#L183) and [message history](https://github.com/openimsdk/protocol/blob/v0.0.14/sdkws/sdkws.proto#L143). The compatible [server route](https://github.com/openimsdk/open-im-server/blob/ff9b2582291d29c500e45d0ffbe92b837b5e199e/internal/api/route.go#L169) and [history handler](https://github.com/openimsdk/open-im-server/blob/ff9b2582291d29c500e45d0ffbe92b837b5e199e/internal/rpc/msg/sync_msg.go#L31) read messages without changing read state. HTTP 200 token errors 1501–1507 are recognized using the [deployed tools definitions](https://github.com/openimsdk/tools/blob/v0.0.5/errs/code.go#L77).
 
-No new `EventKind` values were introduced. The old released decoder therefore has no new persisted enum value to encounter. No direct-message state has been added to the live library.
+The newer upstream sorted-conversation endpoint returned 404 on MakerWorld and is not used. An unread sequence delta alone can briefly include an outgoing send, so every displayed message must prove single-conversation incoming direction and supported user content type from actual metadata.
 
-`ActivityAlerts.pending` also fixes an existing delivery race: after refresh work suspends, the delivery stage now checks the current activity row and its read/dismissed state, using current enriched metadata. A local mark-read action wins over a previously queued banner.
+## Baselines, completeness and alerts
 
-The candidate upstream HTTP operation is POST `/conversation/get_sorted_conversation_list` with an owner token, `userID` and `pagination.pageNumber/showNumber`. The [server handler](https://github.com/openimsdk/open-im-server/blob/9502a1a15fe63f6342fb1e2d8068346a82f278d8/internal/rpc/conversation/conversation.go#L137) reads latest messages and read sequences without marking them read. [Owner-token verification](https://github.com/openimsdk/open-im-server/blob/9502a1a15fe63f6342fb1e2d8068346a82f278d8/pkg/authverify/token.go#L70) permits a matching user. **Its availability, authorization and exact JSON on MakerWorld remain unverified.**
+The first successful sync imports currently unread incoming messages quietly and records every direct-conversation sequence watermark. Subsequent refreshes fetch bounded explicit sequence ranges, including multiple messages between polls. Only new incoming user messages of supported types 101–105 can alert; outgoing, unrelated participants, typing, recall, unsupported controls and deleted messages do not.
 
-## Remaining implementation and verification
+Stable identities are scoped to the monitored profile and conversation. Sequence-backed Activity IDs stay deterministic across restart, sparse ID enrichment and an older application round trip. Already-read messages fetched after another client read them can appear locally as read without an alert. Later remote reads do not change an existing local read/dismissed decision. Remote muted conversations remain visible but do not generate desktop alerts. Disabled alerts consume observations so enabling them cannot replay old messages.
 
-1. Resolve explicit consent for the potential chat-client sign-out and use the normal macOS consent path for the existing app session.
-2. Validate that session against the monitored profile. Test only the verified token wrapper and read-only conversation operation; retain a report of field names/types and aggregate results, never private content or credentials. Do not guess additional endpoints after a mismatch.
-3. Confirm the real unread example, runtime host, response casing, time semantics, token expiry and pagination. The upstream handler assigns `LatestMsgRecvTime` from message send time; MakerWorld must be checked before displaying that as the original message date.
-4. Add an explicit chat connection with a meaningful session-side-effect explanation. Store any approved chat credential separately in Keychain, avoid silent token creation/renewal, and require reconnect on expiry. Do not silently interfere with browser chat during background polling.
-5. Wire optional backward-compatible state into the atomic library commit, local notification controls, connection status and polling. Recheck pending preferences/read/dismissal immediately before desktop delivery.
-6. Run independent QA against the deployed contract, restart/rollback and the real unread example without reading it remotely. Then version, build, install/reopen and package a new release according to the normal release workflow. No package from this development work is ready for distribution.
+Every requested conversation and sequence map must be present. Deleted-history gaps and explicit `Msgs:null` are supported according to the verified contract; a missing conversation is a failed refresh, even when the envelope says success. Requests use at most 100 sequences per range, 5,000 sequences per refresh and 5,000 conversations. Over-budget, malformed, failed or cancelled refreshes do not commit a partial baseline.
 
-Latest-conversation summaries cannot reconstruct all messages received between polls. The prepared conservative watermark policy also suppresses distinct messages with identical timestamps. Complete per-message coverage would require a separately verified read-only history/sequence contract; the application must not claim it from this endpoint alone.
+The DM ledger and rows are also protected at the SQLite transaction boundary. A stale Creator/public/control save cannot erase a newer DM baseline. Local read and dismissed states win over pending delivery, and conflicting identity maps reject the transaction. Equal-time messages have a stable display order.
 
-## Reproducible public-source evidence
+## Public-source provenance
 
-Only public static code was inspected from the local Firefox HTTP cache. No browser session navigation or credential-store extraction was used.
+- Message-page gzip SHA256: `06e3b7293e2efc72566716d97d2c10f81a5990151bad9426480faac4c2aadbef`. It configures chat near decoded offset 33700 and marks messages read when conversations/messages are selected or viewed. The investigation did not navigate that interface.
+- Public WASM: 27,820,783 bytes, SHA256 `2be2a16208ca8cada59c0950473d9e172714514926f1db8b010d89befa27632a`. Embedded protocol version appears near byte 18723218; get-all and sequence routes near bytes 17837371 and 17857966.
+- The `_app` helper resolves GET `/my/im/token` under `design-user-service`. Its decoded SHA256 is `ce1d6a18a470f9f3a6906dc4b939f544b9a5436a41395d725123a31e73a6368b`.
 
-- Message-page gzip SHA256: `06e3b7293e2efc72566716d97d2c10f81a5990151bad9426480faac4c2aadbef`. Decoded offsets: list call approximately 28738; API/WS configuration approximately 33700; conversation read marking approximately 44145; viewport read marking approximately 73175.
-- `_app` first gzip member SHA256: `6429cba2880eeffd7df019ccc3078f97d02ff27fbe9586d02c7667e5cf295099`; decoded SHA256: `ce1d6a18a470f9f3a6906dc4b939f544b9a5436a41395d725123a31e73a6368b`. Decoded offsets: helper module 49451; `/my/im/token` 54207; service export 73627; service wrapper 75564.
-
-Synthetic parser, analytics, pagination, privacy and delivery-race tests accompany the implementation. They establish local behavior against the documented contract; they do not establish live MakerWorld compatibility.
-
-Local validation: 217 unit tests passed, including 32 new tests independently rerun with XCTest; the production build and strict ad-hoc signature verification passed. Repository/history scanning, documentation checks, validation badges and all eight repository-tool tests passed. No live account test or native DM interface test was performed. The validation app retains the development branch's unchanged 3.9.4/build 30 version and must not be confused with a new release package.
+Only public static code and authorized API calls supplied integration evidence. No browser credential store, credential export, browser navigation or server read-marking operation was used. Synthetic unit/regression tests and independent QA cover the production contract without including captured private payloads.

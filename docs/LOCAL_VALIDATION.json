@@ -1,9 +1,9 @@
 {
-  "version": "3.9.4",
-  "build": "30",
-  "tests": 217,
+  "version": "3.9.5",
+  "build": "31",
+  "tests": 242,
   "macos": "14.0",
-  "sourceSHA256": "abdcadb578f3bbf27e4c5fcd51ae369c5dac68534c0d76f86b4b4f1717049712",
-  "verifiedAtUTC": "2026-11-08T00:17:06+00:00",
+  "sourceSHA256": "eb7c5e49c5ebedcf5cf81d241aafa9b514d7afde960296214538a811779fd3fb",
+  "verifiedAtUTC": "2026-11-08T01:17:33+00:00",
   "scope": "Local Apple Silicon tests and optimized ad-hoc build; not a CI result"
 }

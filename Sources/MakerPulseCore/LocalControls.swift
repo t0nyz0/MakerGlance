@@ -5,6 +5,17 @@ public enum LocalControls {
     // that observation was saving, without replacing newly ingested API data.
     @discardableResult public static func preserve(from current: LibraryState, in observation: inout LibraryState) -> Bool {
         var changed = false
+        do { changed = try DirectMessageObservation.preserve(from: current, in: &observation) }
+        catch {
+            // SQLite rejects this incompatible observation before acceptance.
+            // Keep the existing DM portion if a caller merges it directly.
+            if observation.account == nil { observation.account = current.account }
+            observation.account?.directMessages = current.account?.directMessages
+            observation.activity.removeAll { $0.id.hasPrefix("direct:") }
+            observation.activity += current.activity.filter { $0.id.hasPrefix("direct:") }
+            observation.activity = Array(observation.activity.sorted { $0.date > $1.date }.prefix(1000))
+            changed = true
+        }
         if observation.preferences != current.preferences { observation.preferences = current.preferences; changed = true }
         for (id, rule) in current.watches where observation.watches[id] != rule { observation.watches[id] = rule; changed = true }
         if let preferences = current.account?.preferences, observation.account != nil, observation.account?.preferences != preferences {

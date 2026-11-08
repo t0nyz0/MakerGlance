@@ -96,12 +96,20 @@ extension DashboardPointerAudit {
             while let node=target{if node===control{return true};target=node.superview};return false
         }
         func click(_ control:NSView,_ fraction:Double) async throws {
+            window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true)
             try await reveal(control)
             guard hits(control,fraction) else{throw PulseError.incomplete("dashboard control obscured by another hit region")}
             let p=point(control,fraction),t=ProcessInfo.processInfo.systemUptime
             guard let down=NSEvent.mouseEvent(with:.leftMouseDown,location:p,modifierFlags:[],timestamp:t,windowNumber:window.windowNumber,context:nil,eventNumber:10,clickCount:1,pressure:1),let up=NSEvent.mouseEvent(with:.leftMouseUp,location:p,modifierFlags:[],timestamp:t+0.02,windowNumber:window.windowNumber,context:nil,eventNumber:11,clickCount:1,pressure:0) else{throw PulseError.incomplete("dashboard mouse events")}
             NSApp.postEvent(up,atStart:true);window.sendEvent(down)
             try await Task.sleep(for:.milliseconds(120))
+        }
+        func settled(_ condition:()->Bool) async throws -> Bool {
+            for _ in 0..<40 {
+                if condition() {return true}
+                try await Task.sleep(for:.milliseconds(50))
+            }
+            return condition()
         }
         func chooseNextSort(_ control:NSPopUpButton) async throws {
             guard let menu=control.menu else {throw PulseError.incomplete("native sort popup menu")}
@@ -143,17 +151,17 @@ extension DashboardPointerAudit {
                     guard let range=rangeControl() else{throw PulseError.incomplete("visible range control")}
                     let before=model.dashboardModelSelection.visible
                     try await click(range,0.5)
-                    guard model.dashboardActivityWindow == .day,model.dashboardModelSelection.visible != before else{throw PulseError.incomplete("range pointer did not update card data")}
+                    guard try await settled({model.dashboardActivityWindow == .day && model.dashboardModelSelection.visible != before}) else{throw PulseError.incomplete("range pointer did not update card data")}
                     try await click(range,0.85)
-                    guard model.dashboardActivityWindow == .week else{throw PulseError.incomplete("week pointer binding")}
+                    guard try await settled({model.dashboardActivityWindow == .week}) else{throw PulseError.incomplete("week pointer binding")}
                     try await click(range,0.1)
-                    guard model.dashboardActivityWindow == .today else{throw PulseError.incomplete("today pointer binding")}
+                    guard try await settled({model.dashboardActivityWindow == .today}) else{throw PulseError.incomplete("today pointer binding")}
                     guard let sort=sortControl() else{throw PulseError.incomplete("visible sort control")}
                     try await chooseNextSort(sort)
-                    guard model.state.preferences.dashboardSort == .prints,model.dashboardModelSelection.visible.first?.id==b.id else{throw PulseError.incomplete("sort pointer/menu did not update ordered cards")}
+                    guard try await settled({model.state.preferences.dashboardSort == .prints && model.dashboardModelSelection.visible.first?.id==b.id}) else{throw PulseError.incomplete("sort pointer/menu did not update ordered cards")}
                     if let basis=all(root).compactMap({$0 as? NSSegmentedControl}).first(where:{$0.identifier?.rawValue=="dashboard-sort-basis"}) {
                         try await click(basis,0.8)
-                        guard model.state.preferences.dashboardSortBasis == .growth,model.dashboardModelSelection.visible.first?.id==a.id else{throw PulseError.incomplete("sort basis pointer did not reorder cards")}
+                        guard try await settled({model.state.preferences.dashboardSortBasis == .growth && model.dashboardModelSelection.visible.first?.id==a.id}) else{throw PulseError.incomplete("sort basis pointer did not reorder cards")}
                     } else {throw PulseError.incomplete("visible sort basis")}
                     passed+=1
                 }

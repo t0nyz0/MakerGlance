@@ -40,6 +40,13 @@ public actor MakerWorldAPI: SessionBackend {
     public func useSession(_ token: String?) { sessionToken = token }
     public var hasSession: Bool { sessionToken != nil }
 
+    // Only an explicit Settings action requests a chat token. Polling never
+    // creates or renews one because upstream can sign out another chat client.
+    public func authorizeDirectMessages(using service: DirectMessageService, profileID: String) async throws -> DirectMessageCredential {
+        guard let sessionToken else { throw PulseError.authentication }
+        return try await service.authorize(bambuToken: sessionToken, profileID: profileID)
+    }
+
     public func accountEvents() async throws -> [AccountEvent] {
         guard let token = sessionToken else { throw PulseError.authentication }
         // These six category values are verified in MakerWorld's own pages.

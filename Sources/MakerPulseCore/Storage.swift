@@ -80,9 +80,19 @@ public actor Storage {
     public func commit(_ state: LibraryState, samples: [String: Sample] = [:], balance: BalanceSample? = nil) throws {
         try execute("BEGIN IMMEDIATE")
         do {
+            var retained = state
+            do {
+                let previous = try prepare("SELECT payload FROM state WHERE id=1")
+                defer { sqlite3_finalize(previous) }
+                let result = sqlite3_step(previous)
+                if result == SQLITE_ROW {
+                    let saved = try decoder.decode(LibraryState.self, from: blob(previous, column: 0))
+                    try DirectMessageObservation.preserve(from: saved, in: &retained)
+                } else if result != SQLITE_DONE { throw error() }
+            }
             let statement = try prepare("INSERT OR REPLACE INTO state(id,payload) VALUES(1,?)")
             defer { sqlite3_finalize(statement) }
-            try bind(try encoder.encode(state), to: statement, index: 1)
+            try bind(try encoder.encode(retained), to: statement, index: 1)
             guard sqlite3_step(statement) == SQLITE_DONE else { throw error() }
             for (entity, sample) in samples {
                 let s = try prepare("INSERT OR REPLACE INTO samples(entity,time,payload) VALUES(?,?,?)")

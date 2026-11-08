@@ -151,4 +151,68 @@ final class DirectMessageAnalyticsTests: XCTestCase {
         state.dismissedActivityIDs = []; state.activity = []
         XCTAssertTrue(ActivityAlerts.pending([queued], in: state).isEmpty)
     }
+    private func sequenced(_ numbers: [Int64], maximum: Int64, read: Int64 = 0,
+        id: String = "one", seconds: Double = 1, direction: DirectMessageDirection = .incoming) -> DirectMessageConversation {
+        let messages = numbers.map { number in
+            DirectMessageMetadata(clientMessageID: "c\(number)", serverMessageID: "s\(number)", sessionType: 1,
+                direction: direction, sentAt: time.addingTimeInterval(seconds), contentType: 101, sequence: number)
+        }
+        return DirectMessageConversation(conversationID: id, unreadCount: Int(max(0, maximum-read)), receiveOption: .normal,
+            latestMessage: messages.last, messages: messages, maximumSequence: maximum, readSequence: read)
+    }
+    func testSequenceBaselineIncludesQuietUnreadRowsThenRetainsAllSameTimeMessages() throws {
+        var state = library(), metadata: DirectMessageState?
+        XCTAssertTrue(try ingest([sequenced([1, 2], maximum: 2)], metadata: &metadata, state: &state).isEmpty)
+        XCTAssertEqual(state.activity.count, 2); XCTAssertTrue(state.activity.allSatisfy { !$0.isRead })
+        XCTAssertEqual(try DirectMessageAnalytics.knownSequence(conversationID: "one", profileID: "42", metadata: metadata), 2)
+        let next = sequenced([3, 4], maximum: 4, seconds: 2)
+        XCTAssertEqual(try ingest([next], metadata: &metadata, state: &state, seconds: 3).count, 2)
+        XCTAssertEqual(state.activity.count, 4)
+        metadata = try JSONDecoder().decode(DirectMessageState.self, from: JSONEncoder().encode(metadata!))
+        XCTAssertTrue(try ingest([next], metadata: &metadata, state: &state, seconds: 4).isEmpty)
+    }
+    func testReadRemoteRowsAreRetainedQuietlyAndOutgoingRaceCannotAlert() throws {
+        var state = library(), metadata: DirectMessageState?
+        _ = try ingest([sequenced([], maximum: 1, read: 1)], metadata: &metadata, state: &state)
+        XCTAssertTrue(try ingest([sequenced([2], maximum: 2, read: 2)], metadata: &metadata, state: &state, seconds: 2).isEmpty)
+        XCTAssertEqual(state.activity.count, 1); XCTAssertTrue(state.activity[0].isRead)
+        XCTAssertTrue(try ingest([sequenced([3], maximum: 3, read: 2, direction: .outgoing)], metadata: &metadata, state: &state, seconds: 3).isEmpty)
+        XCTAssertEqual(state.activity.count, 1)
+        XCTAssertEqual(try DirectMessageAnalytics.knownSequence(conversationID: "one", profileID: "42", metadata: metadata), 3)
+    }
+    func testSequenceRollbackDoesNotResetBaselineAndUnknownOldConversationIsQuiet() throws {
+        var state = library(), metadata: DirectMessageState?
+        _ = try ingest([sequenced([], maximum: 10, read: 10)], metadata: &metadata, state: &state)
+        XCTAssertTrue(try ingest([sequenced([2], maximum: 2)], metadata: &metadata, state: &state, seconds: 2).isEmpty)
+        XCTAssertEqual(try DirectMessageAnalytics.knownSequence(conversationID: "one", profileID: "42", metadata: metadata), 10)
+        XCTAssertTrue(try ingest([sequenced([1], maximum: 1, id: "late", seconds: -1)], metadata: &metadata, state: &state, seconds: 3).isEmpty)
+        XCTAssertTrue(state.activity.isEmpty)
+    }
+    func testOldApplicationRoundTripLosesDMMetadataWithoutReplayingOrDuplicatingActivity() throws {
+        var state = library(), metadata: DirectMessageState?
+        let row = sequenced([1], maximum: 1)
+        _ = try ingest([row], metadata: &metadata, state: &state)
+        let original = state.activity
+        // An older application ignores new optional account fields. Sequence-
+        // based activity IDs remain deterministic even without the DM baseline.
+        metadata = nil
+        var sparse = row; sparse.messages?[0].clientMessageID = nil
+        XCTAssertTrue(try ingest([sparse], metadata: &metadata, state: &state, seconds: 2).isEmpty)
+        XCTAssertEqual(state.activity, original)
+    }
+    func testQueuedDirectMessageObeysCurrentPreferenceAndOldPreferencesDecode() throws {
+        let old = Data(#"{"eventNotifications":["system"],"balanceNotifications":[]}"#.utf8)
+        var preferences = try JSONDecoder().decode(AccountPreferences.self, from: old)
+        XCTAssertTrue(preferences.allowsDirectMessageAlerts)
+        var state = library(); state.account = AccountState()
+        let item = Activity(id: "direct:test", date: time, title: "New direct message", detail: "Metadata only", symbol: "bell")
+        state.activity = [item]
+        preferences.directMessageNotifications = false; state.account?.preferences = preferences
+        XCTAssertTrue(ActivityAlerts.pending([item], in: state).isEmpty)
+        state.account?.directMessages = DirectMessageState(profileKey: "synthetic", baselineAt: time)
+        let data = try JSONEncoder().encode(state)
+        let restored = try JSONDecoder().decode(LibraryState.self, from: data)
+        XCTAssertFalse(restored.account!.preferences.allowsDirectMessageAlerts)
+        XCTAssertEqual(restored.account?.directMessages, state.account?.directMessages)
+    }
 }
