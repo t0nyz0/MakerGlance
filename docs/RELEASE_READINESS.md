@@ -12,7 +12,9 @@ Validation for this notification update is scoped to direct-message parsing, aut
 
 The broader native automation was inconsistent: release runs stopped at My Prints/menu and dashboard pointer assertions, while the focused native controls worked through actual native input. A subsequent instrumented debug run completed all 50 checks. This does not certify the full release layout/text-size matrix or establish the cause of the earlier failures. It remains a residual testing limitation; no DM-related product regression was identified.
 
-3.9.5 has not been installed or packaged/published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Installation/reopen checks and package/public-download verification remain separate release steps.
+3.9.5 build 31 was installed and reopened with owner authorization. The installed executable matches the verified optimized build and passes strict signature verification. The existing Bambu session restored, the direct-message connection completed through Settings, and a live check persisted a quiet conversation baseline. Existing Activity identities/read state, dismissals, seen IDs, preferences and watch rules were preserved. No new unread message was available during the live checks, so a real new-message desktop alert remains unobserved; automated incoming-message and alert regressions pass.
+
+3.9.5 has not been packaged or published. Its optimized build, native offline checks and final validation are recorded with the development handoff. Package/public-download verification remains a separate release step requiring release authorization.
 
 ## MakerGlance 3.9.4, build 30
 
