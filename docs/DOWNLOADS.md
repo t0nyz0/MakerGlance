@@ -1,8 +1,6 @@
 # MakerGlance downloads
 
-**Local candidate packages:** 3.9.6, build 34. These packages have not been published. Their performance menu distinguishes snapshot net changes from returned UTC daily totals; partial coverage stays explicit. Actual Models-filter pointer reliability and new-menu native UI operation remain unverified. See the [candidate notes](RELEASE_NOTES_3.9.6.md) and [period definitions](PERFORMANCE_PERIODS.md). The public release below is a separate, older build.
-
-Download the Apple Silicon ZIP or DMG from the [MakerGlance 3.9.5 GitHub Release](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.5). This release is version 3.9.5, build 31. Source builds remain available through the README.
+Download the Apple Silicon ZIP or DMG from the [MakerGlance 3.9.6 GitHub Release](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.6). This release is version 3.9.6, build 34. The Performance menu shows snapshot net changes for rolling windows and returned daily totals for the prior UTC calendar month. It labels partial coverage per metric. [Release notes](https://github.com/t0nyz0/MakerGlance/blob/v3.9.6/docs/RELEASE_NOTES_3.9.6.md) · [Period definitions](https://github.com/t0nyz0/MakerGlance/blob/v3.9.6/docs/PERFORMANCE_PERIODS.md).
 
 The build targets **Apple Silicon (arm64), macOS 14 or later**. Intel is not included. Testing used Apple Silicon on the current macOS; the oldest target has not been exercised.
 
@@ -24,4 +22,4 @@ Choose your own creator profile. Private My Prints requires your existing author
 
 Regular/exclusive points and cash fields stay distinct. Local notifications require macOS permission and the app running; this is polling, not server push. Undocumented services may change. This independent app is not affiliated with or endorsed by Bambu Lab or MakerWorld.
 
-Direct messages require a separate explicit connection in Settings after connecting the existing Bambu session. Connecting may sign another MakerWorld chat client out. Message bodies and sender names are not saved or included in alerts. The first sync stays quiet; expired chat connections require an explicit reconnect. See [direct-message behavior and limits](https://github.com/t0nyz0/MakerGlance/blob/v3.9.5/docs/DIRECT_MESSAGES.md).
+Direct messages require a separate explicit connection in Settings after connecting the existing Bambu session. Connecting may sign another MakerWorld chat client out. Message bodies and sender names are not saved or included in alerts. The first sync stays quiet. Expired chat connections require an explicit reconnect. [Direct-message behavior and limits](https://github.com/t0nyz0/MakerGlance/blob/v3.9.6/docs/DIRECT_MESSAGES.md).

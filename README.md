@@ -41,6 +41,8 @@
 
 Local history grows from the observations MakerGlance actually collects. Alerts use polling while the app runs; quitting or sleeping pauses checks. Private features depend on the data exposed by the connected service. The app provides monitoring and history; publishing, printer commands and financial transactions stay outside its scope.
 
+The Dashboard’s **Performance** menu defaults to Lifetime. **1 Day** and **1 Week** cover the last 24 and 168 hours. The month and year choices use rolling local calendar windows. These rolling choices show net changes between saved profile totals. **Last Calendar Month (UTC)** sums the daily values returned in the saved Creator Center Models report. Each metric shows its own coverage, so missing days stay visible. [Period definitions and coverage](docs/PERFORMANCE_PERIODS.md).
+
 ## Take the visual tour
 
 [![MakerGlance visual presentation: local history, clear comparisons and native creator workflows, using fictional native demo data](docs/presentation/preview.png)](docs/presentation/MakerGlance.pdf)
@@ -108,7 +110,7 @@ The existing authorized Bambu connection supplies the read-only task feed; no St
 
 Click a follower's name or avatar in the Followers table, or an identified single-follower entry in Activity, the dashboard or the tray, to open that person's MakerWorld profile in your browser. Single-follower macOS notification clicks use the same identity lookup, including older delivered notifications whose follower ID is still known. Grouped follower notifications open the follower list; mixed update summaries open Activity. The tray has **Mark all read** beside its unread count; Activity also supports clearing individual updates or the inbox. These actions stay local. Choose notification categories in Settings; printer/device updates are off by default.
 
-All models, including newly discovered ones, start watched. Models has working All / Watched / Paused filters and individual alert choices. Pausing alerts keeps observations. The initial import is quiet; persistent milestone high-water marks and event IDs prevent repeated alerts.
+All models, including newly discovered ones, start watched. The Models page offers All models / Watched / Paused filters and individual alert choices. Pausing alerts keeps observations. The initial import is quiet; persistent milestone high-water marks and event IDs prevent repeated alerts.
 
 **Make it yours:** System / Light / Dark appearance, persistent Cards / Compact choice, **85–150% Text Size**, and refresh intervals from 5 minutes to 24 hours, including 10 minutes. Larger text wraps instead of scaling the whole window.
 
@@ -129,7 +131,7 @@ Requests use bounded pagination, deduplication, pacing and transient backoff. In
 
 ## Build & try it
 
-[Download MakerGlance 3.9.5](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.5) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**; macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
+[Download MakerGlance 3.9.6](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.6) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**. macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
 
 ```sh
 git clone https://github.com/t0nyz0/MakerGlance.git

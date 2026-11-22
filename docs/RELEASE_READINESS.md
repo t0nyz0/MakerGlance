@@ -1,18 +1,18 @@
 # Release readiness
 
-## Unpublished MakerGlance 3.9.6, build 34
+## MakerGlance 3.9.6, build 34
 
-This local candidate restores original sidebar styling, bounds Models card hit areas, and adds the scoped Dashboard performance-period menu. The pointer correction and period feature have separate local validation records. [Release-note draft](RELEASE_NOTES_3.9.6.md), [period definitions](PERFORMANCE_PERIODS.md), and [current source validation](LOCAL_VALIDATION.json).
+This build restores original sidebar styling, bounds Models card hit areas, and adds the Dashboard performance-period menu. The pointer correction and period feature have separate local validation records. [Release notes](RELEASE_NOTES_3.9.6.md), [period definitions](PERFORMANCE_PERIODS.md), and [current source validation](LOCAL_VALIDATION.json).
 
-Actual Models filter pointer reliability remains unverified on an isolated macOS desktop. The new menu's native layout and end-to-end keyboard/VoiceOver operation also remain unverified. No fixture windows or interactive QA may be launched on the owner's Mac. Source review, headless regressions and package verification must not be described as actual pointer-event proof.
+Actual Models filter pointer reliability and the new menu’s native layout, keyboard and VoiceOver behavior remain unverified. The local test evidence covers source, headless regressions and package integrity.
 
-Installation and reopening of the real app once are separately owner-authorized after scoped noninteractive checks. Local release-file preparation is authorized; GitHub pushes, tags, asset uploads and publication require separate authorization. The current public download remains 3.9.5. Historical release sections below retain their own validation claims; the current validation file describes this candidate.
+The tested build was installed and reopened. The build manifest records the exact executable hash and identifies the tested source commit separately from the release documentation commit. The release uses ad-hoc signing and targets Apple Silicon on macOS 14 or later. Historical release sections describe their own builds.
 
 ## MakerGlance 3.9.5, build 31
 
 Direct-message support is implemented against the verified deployed REST contract, with metadata-only storage and alerts, explicit connection, separate Keychain storage, quiet baselines, sequence deduplication, token-expiry handling and transactional protection against stale saves. See [DM contract](DIRECT_MESSAGES.md), [release notes](RELEASE_NOTES_3.9.5.md) and [current local source validation](LOCAL_VALIDATION.json).
 
-Authorized live checks verified authentication/profile ownership, all three read-only endpoints and unchanged remote read watermarks. Private payloads and credentials are absent from source, fixtures and reports. Current source validation is for 3.9.5; the published 3.9.4 tag and build manifest retain the release evidence below.
+Authorized live checks verified authentication/profile ownership, all three read-only endpoints and unchanged remote read watermarks. Private payloads and credentials are absent from source, fixtures and reports. The published 3.9.5 and 3.9.4 tags and build manifests retain the evidence for those releases.
 
 Current validation passes 243 unit tests, 58 independently rerun DM regressions, optimized build/signature verification and the repository/documentation checks. Live service validation and direct native UI checks of the DM switch/layout also pass.
 
