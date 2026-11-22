@@ -30,6 +30,7 @@ struct RewardsView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 HStack { Image(systemName: value.isCash ? "banknote" : "sparkles").foregroundStyle(value == .exclusivePoints ? Palette.orange : Palette.accent); Spacer(); Text(value.title).appFont(size: 12).foregroundStyle(Palette.secondaryText) }
                                 Text(format(balance?[value], metric: value)).appFont(size: 27, weight: .semibold, design: .default).monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
+                                    .foregroundStyle(value == .cashEstimate && balance?[value] != nil ? Palette.positive : .primary)
                                 Text(balance?[value] == nil ? "Unavailable until verified" : value.isCash ? balance?.currency(for: value) ?? "Currency unavailable" : "points · exact decimal precision").appFont(size: 12).foregroundStyle(Palette.secondaryText)
                                 if let date = model.state.account?.balanceDates[value] {
                                     Text("Verified \(date.formatted(date: .abbreviated, time: .shortened))\(date != model.state.account?.balance?.date ? " · older observation" : "")").appFont(size: 12).foregroundStyle(Palette.secondaryText)

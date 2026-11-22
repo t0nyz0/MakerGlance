@@ -20,6 +20,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
 
 @MainActor final class AppModel: ObservableObject {
     @Published var state = LibraryState()
+    @Published var performanceSamples: [Sample] = []
     @Published var histories: [String: [Sample]] = [:]
     @Published var modelActivityReports: [ModelActivityWindow: [ObservedModelActivity]] = [:]
     @Published var latestModelIncreases: [String: [Metric: LatestMetricIncrease]] = [:]
@@ -199,7 +200,11 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
                 inboxStatus = "Local verification fixtures. No credentials loaded."
                 rewardsStatus = "Local verification fixtures. No credentials loaded."
                 status = "Showing local observations for UI verification"
-                if let flag=CommandLine.arguments.firstIndex(of:"--dashboard-pointer-audit"),CommandLine.arguments.indices.contains(flag+1) {
+                if let flag = CommandLine.arguments.firstIndex(of: "--sidebar-money-audit"), CommandLine.arguments.indices.contains(flag + 1) {
+                    let output = URL(fileURLWithPath: CommandLine.arguments[flag + 1])
+                    do { try await SidebarMoneyAudit.run(model: self, directory: output) }
+                    catch { try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true); try? Data(error.localizedDescription.utf8).write(to: output.appendingPathComponent("error.txt")) }
+                } else if let flag=CommandLine.arguments.firstIndex(of:"--dashboard-pointer-audit"),CommandLine.arguments.indices.contains(flag+1) {
                     let output=URL(fileURLWithPath:CommandLine.arguments[flag+1])
                     do {try await DashboardPointerAudit.run(model:self,directory:output)}
                     catch {try? FileManager.default.createDirectory(at:output,withIntermediateDirectories:true);try? Data(error.localizedDescription.utf8).write(to:output.appendingPathComponent("error.txt"))}
@@ -329,6 +334,9 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
             output["profile"] = try await storage.history(entity: "profile", limit: 2000)
             for model in state.models { output["model:\(model.id)"] = try await storage.history(entity: "model:\(model.id)", limit: 2000) }
             histories = output
+            // Period comparisons need actual boundary observations rather than
+            // the chart's 2,000-bucket display series. This is local data only.
+            performanceSamples = try await storage.activityHistory(entity: "profile", since: Date().addingTimeInterval(-366 * 86400))
             var activity: [String: [Sample]] = [:]
             for design in state.models {
                 activity[design.id] = try await storage.activityHistory(entity: "model:\(design.id)", since: Date().addingTimeInterval(-7 * 86400))

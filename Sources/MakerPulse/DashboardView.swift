@@ -4,6 +4,7 @@ import MakerPulseCore
 struct DashboardView: View {
     @Environment(\.appTextScale) private var textScale
     @EnvironmentObject var model: AppModel
+    @State private var performancePeriod: PerformancePeriod = .lifetime
     var body: some View {
         GeometryReader { bounds in
             ScrollView {
@@ -31,17 +32,37 @@ struct DashboardView: View {
         }
     }
     func performance(columns: Int) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Lifetime performance").appFont(size: 16, weight: .semibold)
-                Spacer()
-                Text("Change today").appFont(size: 12).foregroundStyle(Palette.secondaryText)
-                ContextInfo("Today's observation coverage") {
+        let interval = performancePeriod.interval(now: Date())
+        let observations = Dictionary(uniqueKeysWithValues: Metric.allCases.compactMap { metric -> (Metric, PerformanceObservation)? in
+            guard let interval else { return nil }
+            return (metric, performancePeriod == .lastCalendarMonth
+                ? ProfilePerformance.calendarMonthTotal(metric: metric, report: model.state.creatorReport, interval: interval)
+                : ProfilePerformance.netChange(metric: metric, samples: model.performanceSamples, interval: interval))
+        })
+        return VStack(alignment: .leading, spacing: 16) {
+            (textScale > 1.2 ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))) {
+                Text(performancePeriod == .lifetime ? "Lifetime performance" : "Performance").appFont(size: 16, weight: .semibold)
+                if textScale <= 1.2 { Spacer() }
+                HStack(spacing: 12) {
+                    if performancePeriod == .lifetime { Text("Change today").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
+                    Picker("Performance period", selection: $performancePeriod) {
+                        ForEach(PerformancePeriod.allCases) { Text($0.title).tag($0) }
+                    }.pickerStyle(.menu).labelsHidden().frame(width: 260 * max(1, textScale))
+                ContextInfo(performancePeriod == .lifetime ? "Today's observation coverage" : "Selected period and coverage") {
+                    if performancePeriod == .lifetime {
                     Text("Today is your Mac's local calendar day, from midnight to midnight. Growth starts with each metric's first actual observation; missing time is not estimated.")
                     ForEach(Metric.allCases) { metric in
                         HStack { Text(metric.title); Spacer(); Text(model.profileDayGrowth(metric).baselineDate.map { $0.formatted(date: .omitted, time: .shortened) } ?? "Unavailable") }.appFont(size: 12)
                     }
                     Text("Collection saves are aggregate counts. The API does not identify individual collection additions or original follower dates.")
+                    } else if let interval {
+                        Text(performancePeriod == .lastCalendarMonth ? "UTC calendar-month totals sum only returned Creator Center Models daily values. Missing days and fields are not zero. Follower-activity semantics are unverified, so no follower total is claimed." : "These values are net changes between actual saved profile totals, not counts of events received. One day means 24 hours; one week means seven 24-hour days. Month and year windows roll back through your Mac's local calendar. Missing boundary time is not estimated.")
+                        Text("Requested: \(interval.start.formatted(date: .abbreviated, time: .shortened)) to \(interval.end.formatted(date: .abbreviated, time: .shortened)). \(performancePeriod == .lastCalendarMonth ? "UTC month boundaries; local display times below." : TimeZone.autoupdatingCurrent.identifier)")
+                        ForEach(Metric.allCases) { metric in
+                            if let value = observations[metric] { Text("\(metric.title): \(performanceHelp(value))").appFont(size: 12) }
+                        }
+                    }
+                }
                 }
             }
             Surface(inset: 18) {
@@ -50,14 +71,26 @@ struct DashboardView: View {
                         Button { model.openAnalytics(metric) } label: {
                             VStack(alignment: .leading, spacing: 10) {
                                 Label(metric == .collections ? "Saves" : metric.title, systemImage: metric.symbol).appFont(size: 12, weight: .medium).foregroundStyle(Palette.secondaryText)
-                                Text(model.state.profile?.counts[metric].map { $0.formatted() } ?? "—").appFont(size: 32, weight: .semibold).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
-                                GrowthIndicator(growth: model.profileDayGrowth(metric), compact: true, metric: metric)
+                                Text(performancePeriod == .lifetime ? model.state.profile?.counts[metric].map { $0.formatted() } ?? "—" : observations[metric]?.value.map { (performancePeriod == .lastCalendarMonth || $0 <= 0 ? "" : "+") + DisplayNumber.decimal($0) } ?? "—")
+                                    .appFont(size: 32, weight: .semibold).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
+                                if performancePeriod == .lifetime { GrowthIndicator(growth: model.profileDayGrowth(metric), compact: true, metric: metric) }
+                                else if let value = observations[metric] { Text(value.coverageLabel).appFont(size: 12).foregroundStyle(Palette.secondaryText).fixedSize(horizontal: false, vertical: true) }
                             }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                        }.buttonStyle(.plain).help("\(metric.title). Open \(metric == .followers ? "followers" : "history"). \(model.profileDayGrowth(metric).isPartial ? "Today has partial observation coverage." : "A midnight baseline is available.")")
+                        }.buttonStyle(.plain).help("\(metric.title). Open \(metric == .followers ? "followers" : "history"). \(observations[metric].map(performanceHelp) ?? (model.profileDayGrowth(metric).isPartial ? "Today has partial observation coverage." : "A midnight baseline is available."))")
                     }
                 }
             }
+            if performancePeriod != .lifetime {
+                Text(performancePeriod == .lastCalendarMonth ? "Server-reported Models activity · UTC · only returned days are summed. Load the full month in Analytics → Creator Center for complete coverage." : "Observed net change in profile totals · not events received. Partial windows exclude missing time; gaps are not filled.")
+                    .appFont(size: 12).foregroundStyle(Palette.secondaryText)
+            }
         }
+    }
+    private func performanceHelp(_ value: PerformanceObservation) -> String {
+        if let reason = value.unavailableReason { return reason }
+        let span = value.comparisonStart.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "unavailable"
+        let end = value.comparisonEnd.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "unavailable"
+        return "\(value.coverageLabel). \(value.observations) actual \(value.expectedDays == nil ? "snapshots" : "UTC daily values"), \(span) to \(end).\(value.expectedDays == nil ? " Largest gap: \(Int(value.largestGap / 60)) minutes." : "")"
     }
     var momentum: some View { WatchedModelsSection() }
     var inbox: some View {
@@ -179,7 +212,8 @@ private struct DashboardRewards: View {
                                 Text(title(metric)).appFont(size: 12).foregroundStyle(Palette.secondaryText).lineLimit(1)
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                                     Text(balance?[metric].map(DisplayNumber.decimal) ?? "—").appFont(size: 26, weight: .semibold).monospacedDigit().lineLimit(1).minimumScaleFactor(0.65)
-                                    if metric.isCash, let currency = balance?.currency(for: metric) { Text(currency).appFont(size: 11).foregroundStyle(Palette.secondaryText) }
+                                        .foregroundStyle(metric == .cashEstimate && balance?[metric] != nil ? Palette.positive : .primary)
+                                    if metric.isCash, let currency = balance?.currency(for: metric) { Text(currency).appFont(size: 11).foregroundStyle(metric == .cashEstimate && balance?[metric] != nil ? Palette.positive : Palette.secondaryText) }
                                 }
                             }.frame(maxWidth: .infinity, alignment: .leading)
                         }.buttonStyle(.plain).help("\(metric.title). \(model.state.account?.balanceDates[metric].map { "Verified " + $0.formatted(date: .abbreviated, time: .shortened) } ?? "Not verified yet"). Open history and transaction reasons.")

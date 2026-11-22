@@ -67,7 +67,9 @@ struct ModelCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { model.selectedModel = design } label: {
-                RemoteImage(url: design.cover, pixelWidth: 640).frame(height: 200).frame(maxWidth: .infinity).clipped()
+                // Cropping an oversized cover is visual only. Bound its hit
+                // shape too, so it cannot intercept filters above the grid.
+                RemoteImage(url: design.cover, pixelWidth: 640).frame(height: 200).frame(maxWidth: .infinity).contentShape(Rectangle()).clipped()
                     .overlay(alignment: .topLeading) {
                         VStack(alignment: .leading, spacing: 6) {
                             ForEach([Metric.prints, .likes]) { metric in
@@ -93,7 +95,7 @@ struct ModelCard: View {
                     else { Text("Awaiting baseline") }
                 }.appFont(size: 11).foregroundStyle(Palette.secondaryText).padding(.top, 2)
             }.padding(18)
-        }.background(Palette.surface, in: RoundedRectangle(cornerRadius: 18)).clipShape(RoundedRectangle(cornerRadius: 18))
+        }.background(Palette.surface, in: RoundedRectangle(cornerRadius: 18)).clipShape(RoundedRectangle(cornerRadius: 18)).contentShape(Rectangle())
     }
 }
 

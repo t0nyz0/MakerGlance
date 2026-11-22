@@ -2,6 +2,27 @@ import XCTest
 @testable import MakerPulseCore
 
 final class WatchAndPollingTests: XCTestCase {
+    func testModelsFilterSurvivesEveryTransitionDuringStaleRefreshWithFortyWatchedModels() {
+        let models = (0..<40).map { Design(id: "fixture-\($0)", title: "Fixture \($0)", counts: Counts(likes: $0)) }
+        for previous in ModelWatchFilter.allCases {
+            for selected in ModelWatchFilter.allCases {
+                var observation = LibraryState()
+                observation.models = models
+                observation.preferences.modelFilter = previous
+                var current = observation
+                current.preferences.modelFilter = selected
+                // A background snapshot contributes newer data while the UI
+                // choice changes; neither is allowed to overwrite the other.
+                observation.models[0].counts.likes = 99
+                LocalControls.preserve(from: current, in: &observation)
+                XCTAssertEqual(observation.preferences.modelFilter, selected, "\(previous) → \(selected)")
+                XCTAssertEqual(observation.models[0].counts.likes, 99)
+                XCTAssertEqual(ModelWatchFilter.all.count(observation.models, watches: observation.watches), 40)
+                XCTAssertEqual(ModelWatchFilter.watched.count(observation.models, watches: observation.watches), 40)
+                XCTAssertEqual(ModelWatchFilter.paused.count(observation.models, watches: observation.watches), 0)
+            }
+        }
+    }
     func testAllWatchedDefaultAndExplicitPauseSurviveRefreshAndRestart() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("MakerPulseWatches-\(UUID().uuidString)")
         defer { try? FileManager.default.removeItem(at: directory) }

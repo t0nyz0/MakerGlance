@@ -37,7 +37,7 @@ private struct DocumentationRoot: View {
     static func install(in model: AppModel, store: Storage) async throws {
         let fixture = DemoData()
         try await store.commit(fixture.state)
-        model.state = fixture.state; model.histories = fixture.samples; model.latestModelIncreases = fixture.increases
+        model.state = fixture.state; model.histories = fixture.samples; model.performanceSamples = fixture.samples["profile"] ?? []; model.latestModelIncreases = fixture.increases
         let models = Dictionary(uniqueKeysWithValues: fixture.state.models.map { ($0.id, fixture.samples["model:\($0.id)"] ?? []) })
         for window in ModelActivityWindow.allCases {
             model.modelActivityReports[window] = ModelActivity.ranked(designs: fixture.state.models, samples: models, events: fixture.state.activity, window: window)

@@ -1,5 +1,7 @@
 # MakerGlance downloads
 
+**Local candidate packages:** 3.9.6, build 34. These packages have not been published. Their performance menu distinguishes snapshot net changes from returned UTC daily totals; partial coverage stays explicit. Actual Models-filter pointer reliability and new-menu native UI operation remain unverified. See the [candidate notes](RELEASE_NOTES_3.9.6.md) and [period definitions](PERFORMANCE_PERIODS.md). The public release below is a separate, older build.
+
 Download the Apple Silicon ZIP or DMG from the [MakerGlance 3.9.5 GitHub Release](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.5). This release is version 3.9.5, build 31. Source builds remain available through the README.
 
 The build targets **Apple Silicon (arm64), macOS 14 or later**. Intel is not included. Testing used Apple Silicon on the current macOS; the oldest target has not been exercised.

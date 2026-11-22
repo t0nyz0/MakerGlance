@@ -25,10 +25,13 @@ struct RootView: View {
                             if item == .overview && model.unread > 0 { Text("\(model.unread)").appFont(.caption, weight: .bold).padding(.horizontal, 6).padding(.vertical, 2).background(Palette.accent.opacity(0.15), in: Capsule()) }
                             if item == .models && !model.state.models.isEmpty { Text("\(model.state.models.count)").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
                         }.appFont(size: 13, weight: model.destination.sidebarParent == item ? .semibold : .regular).padding(.horizontal, 13).padding(.vertical, 11)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                             .foregroundStyle(model.destination.sidebarParent == item ? Palette.accent : Palette.secondaryText)
                             .background(model.destination.sidebarParent == item ? Palette.accent.opacity(0.1) : .clear, in: RoundedRectangle(cornerRadius: 9))
                     }.buttonStyle(.plain).padding(.horizontal, 12).padding(.bottom, 4)
                         .accessibilityLabel(item.rawValue).accessibilityAddTraits(model.destination.sidebarParent == item ? .isSelected : [])
+                        .accessibilityIdentifier("sidebar-\(item.rawValue)")
                 }
                 Spacer()
                 HStack(spacing: 8) {
@@ -81,7 +84,7 @@ struct RootView: View {
         }
         .sheet(item: $model.selectedModel) { design in ModelDetailView(design: model.state.models.first { $0.id == design.id } ?? design).environmentObject(model) }
         .preferredColorScheme(model.effectiveColorScheme)
-        .background(NativeControlTypography(scale: textScale, refreshID: model.destination.rawValue + model.analyticsSection.rawValue))
+        .background(NativeControlTypography(scale: textScale, refreshID: model.destination.rawValue + model.analyticsSection.rawValue).allowsHitTesting(false))
         .onAppear { model.openWindowAction = { openWindow(id: "main") } }
     }
     var lastSync: String {

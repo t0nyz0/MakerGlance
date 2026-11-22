@@ -1,5 +1,13 @@
 # Release readiness
 
+## Unpublished MakerGlance 3.9.6, build 34
+
+This local candidate restores original sidebar styling, bounds Models card hit areas, and adds the scoped Dashboard performance-period menu. The pointer correction and period feature have separate local validation records. [Release-note draft](RELEASE_NOTES_3.9.6.md), [period definitions](PERFORMANCE_PERIODS.md), and [current source validation](LOCAL_VALIDATION.json).
+
+Actual Models filter pointer reliability remains unverified on an isolated macOS desktop. The new menu's native layout and end-to-end keyboard/VoiceOver operation also remain unverified. No fixture windows or interactive QA may be launched on the owner's Mac. Source review, headless regressions and package verification must not be described as actual pointer-event proof.
+
+Installation and reopening of the real app once are separately owner-authorized after scoped noninteractive checks. Local release-file preparation is authorized; GitHub pushes, tags, asset uploads and publication require separate authorization. The current public download remains 3.9.5. Historical release sections below retain their own validation claims; the current validation file describes this candidate.
+
 ## MakerGlance 3.9.5, build 31
 
 Direct-message support is implemented against the verified deployed REST contract, with metadata-only storage and alerts, explicit connection, separate Keychain storage, quiet baselines, sequence deduplication, token-expiry handling and transactional protection against stale saves. See [DM contract](DIRECT_MESSAGES.md), [release notes](RELEASE_NOTES_3.9.5.md) and [current local source validation](LOCAL_VALIDATION.json).
