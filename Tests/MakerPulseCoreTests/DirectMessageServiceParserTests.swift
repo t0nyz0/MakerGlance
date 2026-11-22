@@ -57,9 +57,10 @@ final class DirectMessageServiceParserTests: XCTestCase {
     }
 
     func testSequencesRejectMissingUnexpectedAndMalformedRows() throws {
-        for payload: Any in [[:], ["seqs": NSNull()], ["seqs": []], ["seqs": [:]],
+        let malformedPayloads: [[String: Any]] = [[:], ["seqs": NSNull()], ["seqs": []], ["seqs": [:]],
             ["seqs": ["single": ["maxSeq": 1]]], ["seqs": ["single": ["hasReadSeq": 1]]],
-            ["seqs": ["single": ["maxSeq": 1, "hasReadSeq": 1], "unexpected": ["maxSeq": 1, "hasReadSeq": 1]]]] {
+            ["seqs": ["single": ["maxSeq": 1, "hasReadSeq": 1], "unexpected": ["maxSeq": 1, "hasReadSeq": 1]]]]
+        for payload in malformedPayloads {
             XCTAssertThrowsError(try DirectMessageServiceParser.sequences(data(envelope(payload)), conversationIDs: ["single"]))
         }
         for bad: Any in [-1, true, "1", 1.5, NSNull()] {

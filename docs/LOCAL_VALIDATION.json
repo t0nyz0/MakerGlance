@@ -3,7 +3,7 @@
   "build": "34",
   "tests": 255,
   "macos": "14.0",
-  "sourceSHA256": "f4e8a7673119fcc2dc996892011cd8548c892f38f3ff4c20a25ee7e72d26b443",
-  "verifiedAtUTC": "2026-11-22T16:41:21+00:00",
+  "sourceSHA256": "050df4b108386e0c697f8bdb31af9c4b98836f9ebe733a598190c73b5d809e9b",
+  "verifiedAtUTC": "2026-11-22T16:56:07+00:00",
   "scope": "Local Apple Silicon tests and optimized ad-hoc build; not a CI result"
 }
