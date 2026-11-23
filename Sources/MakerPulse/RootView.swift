@@ -85,6 +85,7 @@ struct RootView: View {
         .sheet(item: $model.selectedModel) { design in ModelDetailView(design: model.state.models.first { $0.id == design.id } ?? design).environmentObject(model) }
         .preferredColorScheme(model.effectiveColorScheme)
         .background(NativeControlTypography(scale: textScale, refreshID: model.destination.rawValue + model.analyticsSection.rawValue).allowsHitTesting(false))
+        .background(MainWindowActivityObserver(model: model).allowsHitTesting(false))
         .onAppear { model.openWindowAction = { openWindow(id: "main") } }
     }
     var lastSync: String {

@@ -4,7 +4,7 @@
 <p align="center">Your MakerWorld creator workspace, at home on the Mac.</p>
 <!-- verified-badges:start -->
 <p align="center">
-<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.7"></a>
+<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.9"></a>
 <a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 258 passing"></a>
 <a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/build.svg" alt="local build: verified"></a>
 <a href="#build--try-it"><img src="docs/media/badges/macos.svg" alt="macOS: 14.0 target"></a>
@@ -31,11 +31,11 @@
 | --- | --- |
 | **Model performance** | Track likes, downloads, prints, boosts and saves. Compare lifetime totals with observed gains for Today, 24 hours or seven days; sort watched models and switch between Cards and Compact. |
 | **Trends & reports** | Review your local observation history and available Creator Center period reports, with local-day growth kept separate from server UTC reports. |
-| **Activity & alerts** | Follow selected model changes, milestones, new followers and supported account activity. Choose notification categories, pause individual model alerts, mark updates read or clear the local inbox. |
+| **Activity & alerts** | Follow selected model changes, milestones, new followers and supported account activity. Opening the main window or menu bar panel marks existing notifications read. Choose notification categories, pause individual model alerts or clear the local inbox. |
 | **Followers** | Search and sort your community, see when new followers were first observed, and click a follower's name, avatar or identified single-follower update to open their MakerWorld profile. |
 | **Points & wallet** | Keep regular points, exclusive points, cash-redemption estimates and wallet funds distinct. Review supplied transaction reasons and model context where available. |
 | **My Prints** | Find your own recorded cloud jobs by model, printer or plate. Filter by status and date, sort the history, and open supplied job details. |
-| **Desktop workflow** | Check totals and unread activity from the menu bar with the main window closed. Choose System, Light or Dark appearance, adjust text size and set your refresh interval. |
+| **Desktop workflow** | Check totals and scroll through all saved activity from the menu bar with the main window closed. Choose System, Light or Dark appearance, adjust text size and set your refresh interval. |
 
 **Choose how to start.** Enter your own numeric MakerWorld user ID for public profile, model and follower monitoring. Connect your own Bambu account to add supported private inbox activity, rewards, wallet observations, Creator Center reports and My Prints. You can explore the offline demo without connecting an account.
 
@@ -131,7 +131,7 @@ Requests use bounded pagination, deduplication, pacing and transient backoff. In
 
 ## Build & try it
 
-[Download MakerGlance 3.9.6](https://github.com/t0nyz0/MakerGlance/releases/tag/v3.9.6) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG are **ad-hoc signed and not notarized by Apple**. macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
+[Download the latest MakerGlance release](https://github.com/t0nyz0/MakerGlance/releases/latest) for **Apple Silicon, macOS 14 or later**, or build from source below. The ZIP and DMG use **ad hoc signing** and do not have Apple notarization. macOS may show a developer warning. [Download, signing and installation notes](docs/DOWNLOADS.md).
 
 ```sh
 git clone https://github.com/t0nyz0/MakerGlance.git

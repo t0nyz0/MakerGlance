@@ -31,7 +31,7 @@ struct MenuSummary: View {
             }.padding(18)
             Divider()
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     status
                     VStack(alignment: .leading, spacing: 11) {
                         HStack { Text("Today").appFont(.headline); Spacer(); Text("Local day · observed coverage").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
@@ -54,7 +54,7 @@ struct MenuSummary: View {
                     Divider()
                     HStack { Text("Recent activity").appFont(.headline); Spacer(); Button("Open inbox") { model.showMain(.activity) }.appFont(size: 12) }
                     if model.state.activity.isEmpty { Text("Your initial import stays quiet. New activity will appear here.").appFont(size: 12).foregroundStyle(Palette.secondaryText) }
-                    ForEach(model.state.activity.prefix(2)) { item in
+                    ForEach(model.state.activity) { item in
                         if ActivityLinks.followerProfile(for: item, followers: model.state.followers) != nil {
                             ActivityRow(activity: item, compact: true)
                         } else {
@@ -79,6 +79,7 @@ struct MenuSummary: View {
                 }.appFont(size: 12)
             }.padding(16)
         }.frame(width: 420 * max(1, textScale)).background(Palette.canvas).background(NativeControlTypography(scale: textScale))
+            .background(TrayActivityObserver(model: model).allowsHitTesting(false))
     }
     var status: some View {
         VStack(alignment: .leading, spacing: 6) {

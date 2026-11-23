@@ -89,6 +89,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     private var calendarObservers: [NSObjectProtocol] = []
     private var wakeObserver: NSObjectProtocol?
     private var scheduledRefreshQueued = false
+    private var markReadWhenLibraryLoads = false
     var unread: Int { state.activity.filter { !$0.isRead }.count }
     var watching: Int { ModelWatchFilter.watched.count(state.models, watches: state.watches) }
     var isRefreshing: Bool { syncing || privateSyncing || printsLoading || connectingDirectMessages || directMessagesSyncing }
@@ -96,9 +97,22 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     func showMain(_ section: Destination = .overview, modelID: String? = nil) {
         destination = section
         selectedModel = modelID.flatMap { id in state.models.first { $0.id == id } }
-        if let window = NSApp.windows.first(where: { $0.title == AppIdentity.displayName && $0.contentView != nil && !($0 is NSPanel) }) ?? verificationWindow { window.makeKeyAndOrderFront(nil) }
-        else { openWindowAction?() }
+        if let window = NSApp.windows.first(where: { $0.title == AppIdentity.displayName && $0.contentView != nil && !($0 is NSPanel) }) ?? verificationWindow {
+            if window.isMiniaturized { window.deminiaturize(nil) }
+            window.makeKeyAndOrderFront(nil)
+            activitySurfaceOpened()
+        } else {
+            openWindowAction?()
+        }
         NSApp.activate(ignoringOtherApps: true)
+    }
+    func activitySurfaceOpened() {
+        guard !isDemo else { return }
+        guard loaded else {
+            markReadWhenLibraryLoads = true
+            return
+        }
+        if unread > 0 { markAllRead() }
     }
     func openNotification(_ identifier: String) {
         guard !isDemo, !isolatedQA else { return }
@@ -181,6 +195,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
             }
             if state.account != nil { try await store.commit(state) }
             balanceHistory = rewardsHistory; loaded = true
+            if markReadWhenLibraryLoads {
+                markReadWhenLibraryLoads = false
+                activitySurfaceOpened()
+            }
             if CommandLine.arguments.contains("--open-settings") { destination = .settings }
             if state.preferences.pollingSelectionVersion == nil {
                 if state.preferences.pollingMinutes == 15 { state.preferences.pollingMinutes = 10 }
@@ -553,6 +571,10 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
         guard isolatedQA, let storage else { throw PulseError.incomplete("isolated watch persistence verification") }
         return try await storage.load().watches
     }
+    func auditStoredActivity() async throws -> [Activity] {
+        guard isolatedQA, let storage else { throw PulseError.incomplete("isolated activity persistence verification") }
+        return try await storage.load().activity
+    }
     func auditStoredDirectMessagePreference() async throws -> Bool? {
         guard isolatedQA, let storage else { throw PulseError.incomplete("isolated direct-message preference verification") }
         return try await storage.load().account?.preferences.directMessageNotifications
@@ -635,7 +657,7 @@ enum AnalyticsSection: String, CaseIterable, Identifiable {
     }
     func markAllRead() {
         for i in state.activity.indices { state.activity[i].isRead = true }; save()
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        if !isolatedQA, !isDemo { UNUserNotificationCenter.current().removeAllDeliveredNotifications() }
     }
     func enableNotifications() async {
         guard !isDemo else { return }

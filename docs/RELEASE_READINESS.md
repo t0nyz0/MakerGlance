@@ -1,5 +1,11 @@
 # Release readiness
 
+## MakerGlance 3.9.9, build 37
+
+This update collects the model card pill fix, automatic read status on opening the main window or menu bar panel, and the full scrollable tray activity list. [Release notes](RELEASE_NOTES_3.9.9.md).
+
+All 258 Swift tests and eight repository tool tests passed. The installed Apple Silicon app matches the verified build, and the installer recorded its successful launch. The isolated GUI audit could not start in the build session, so the tray interaction and macOS 14 launch remain unverified. [Local source validation](LOCAL_VALIDATION.json).
+
 ## MakerGlance 3.9.6, build 34
 
 This build restores original sidebar styling, bounds Models card hit areas, and adds the Dashboard performance-period menu. The pointer correction and period feature have separate local validation records. [Release notes](RELEASE_NOTES_3.9.6.md), [period definitions](PERFORMANCE_PERIODS.md), and [current source validation](LOCAL_VALIDATION.json).
