@@ -122,25 +122,19 @@ struct DashboardModelRow: View {
     let item: ObservedModelActivity
     let window: ModelActivityWindow
     var design: Design { item.design }
-    var overlayMetrics: [Metric] {
-        let changed = item.changedMetrics
-        return (item.deltas[.prints] ?? 0) > 0 ? [.prints] + changed.filter { $0 != .prints } : changed
-    }
+    var overlayMetrics: [Metric] { ModelActivity.badgeMetrics(for: item.deltas) }
     var body: some View {
         Button { model.selectedModel = design } label: {
             VStack(alignment: .leading, spacing: 0) {
-                RemoteImage(url: design.cover, pixelWidth: 640).frame(height: 200).frame(maxWidth: .infinity).contentShape(Rectangle()).clipped()
-                    .overlay(alignment: .topLeading) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach(overlayMetrics.prefix(2)) { metric in
-                                if let delta = item.deltas[metric] { ModelGrowthBadge(metric: metric, delta: delta, fresh: model.latestModelIncreases[design.id]?[metric], period: window.title) }
-                            }
-                            if item.changedMetrics.isEmpty {
-                                Label(item.lastActivityAt != nil ? "New activity" : item.hasComparison ? "No observed change" : item.baselineDate == nil ? "Awaiting observation" : "Baseline captured", systemImage: item.lastActivityAt != nil ? "waveform.path" : "clock")
-                                    .appFont(size: 11, weight: .semibold).padding(.horizontal, 10).padding(.vertical, 7).foregroundStyle(.white).background(Color.black.opacity(0.82), in: Capsule())
-                            }
-                        }.padding(12)
+                ModelCardArtwork(cover: design.cover) {
+                    ForEach(overlayMetrics) { metric in
+                        if let delta = item.deltas[metric] { ModelGrowthBadge(metric: metric, delta: delta, fresh: model.latestModelIncreases[design.id]?[metric], period: window.title) }
                     }
+                    if item.changedMetrics.isEmpty {
+                        Label(item.lastActivityAt != nil ? "New activity" : item.hasComparison ? "No observed change" : item.baselineDate == nil ? "Awaiting observation" : "Baseline captured", systemImage: item.lastActivityAt != nil ? "waveform.path" : "clock")
+                            .appFont(size: 11, weight: .semibold).padding(.horizontal, 10).padding(.vertical, 7).foregroundStyle(.white).background(Color.black.opacity(0.82), in: Capsule())
+                    }
+                }
                 VStack(alignment: .leading, spacing: 15) {
                     Text(design.title).appFont(size: 15, weight: .semibold).lineLimit(2).frame(maxWidth: .infinity, minHeight: 38, alignment: .topLeading)
                     HStack(spacing: 6) {

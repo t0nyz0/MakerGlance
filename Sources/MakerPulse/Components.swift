@@ -42,6 +42,23 @@ struct Surface<Content: View>: View {
     }
 }
 
+struct ModelCardArtwork<Badges: View>: View {
+    let cover: String?
+    let badges: Badges
+    init(cover: String?, @ViewBuilder badges: () -> Badges) { self.cover = cover; self.badges = badges() }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) { badges }
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 200, alignment: .topLeading)
+            .background {
+                RemoteImage(url: cover, pixelWidth: 640)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped().allowsHitTesting(false)
+            }
+            .contentShape(Rectangle()).clipped()
+    }
+}
+
 struct RemoteImage: View {
     let url: String?
     var symbol = "cube.transparent"

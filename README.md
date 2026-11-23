@@ -4,8 +4,8 @@
 <p align="center">Your MakerWorld creator workspace, at home on the Mac.</p>
 <!-- verified-badges:start -->
 <p align="center">
-<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.6"></a>
-<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 255 passing"></a>
+<a href="#build--try-it"><img src="docs/media/badges/version.svg" alt="source: v3.9.7"></a>
+<a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/tests.svg" alt="local tests: 258 passing"></a>
 <a href="docs/LOCAL_VALIDATION.json"><img src="docs/media/badges/build.svg" alt="local build: verified"></a>
 <a href="#build--try-it"><img src="docs/media/badges/macos.svg" alt="macOS: 14.0 target"></a>
 <a href="Package.swift"><img src="docs/media/badges/swift.svg" alt="Swift: 6"></a>

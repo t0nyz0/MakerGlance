@@ -50,6 +50,28 @@ final class ModelActivityTests: XCTestCase {
         let result = rank([design("a")], ["a": [sample(500, nil), sample(50, 10), sample(-10, 100)]])[0]
         XCTAssertNil(result.lastActivityAt); XCTAssertNil(result.deltas[.likes]); XCTAssertNil(result.deltas[.downloads])
     }
+    func testAllFiveObservedChangesRemainAvailableAsCardPills() {
+        let before = Counts(likes: 100, downloads: 200, prints: 30, boosts: 4, collections: 20)
+        let after = Counts(likes: 123, downloads: 201, prints: 33, boosts: 6, collections: 25)
+        let history = [Sample(date: now.addingTimeInterval(-600), counts: before), Sample(date: now, counts: after)]
+        let row = ModelActivity.ranked(designs: [Design(id: "five", title: "Sample conveyor", counts: after)], samples: ["five": history], events: [], window: .day, now: now, calendar: calendar())[0]
+        XCTAssertEqual(row.deltas, [.likes: 23, .downloads: 1, .prints: 3, .boosts: 2, .collections: 5])
+        for increasesOnly in [false, true] {
+            let pills = ModelActivity.badgeMetrics(for: row.deltas, increasesOnly: increasesOnly)
+            XCTAssertEqual(pills, [.prints, .likes, .downloads, .boosts, .collections])
+            XCTAssertEqual(Set(pills).count, 5)
+        }
+    }
+    func testCardPillsDoNotInventMissingOrUnchangedMetrics() {
+        XCTAssertTrue(ModelActivity.badgeMetrics(for: [:]).isEmpty)
+        XCTAssertTrue(ModelActivity.badgeMetrics(for: [.likes: 0, .downloads: 0, .prints: 0, .boosts: 0, .collections: 0]).isEmpty)
+        XCTAssertEqual(ModelActivity.badgeMetrics(for: [.likes: 23, .downloads: 1]), [.likes, .downloads])
+    }
+    func testDashboardRetainsObservedDecreasesWhileModelsKeepsGrowthOnly() {
+        let deltas: [Metric: Int] = [.likes: 2, .downloads: 0, .prints: -1, .collections: -3]
+        XCTAssertEqual(ModelActivity.badgeMetrics(for: deltas), [.likes, .prints, .collections])
+        XCTAssertEqual(ModelActivity.badgeMetrics(for: deltas, increasesOnly: true), [.likes])
+    }
     func testTodayUsesLocalMidnightAcrossDST() {
         var c = Calendar(identifier: .gregorian); c.timeZone = TimeZone(identifier: "America/Chicago")!
         let date = ISO8601DateFormatter().date(from: "2026-11-01T20:00:00Z")!

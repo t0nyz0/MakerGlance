@@ -67,18 +67,13 @@ struct ModelCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Button { model.selectedModel = design } label: {
-                // Cropping an oversized cover is visual only. Bound its hit
-                // shape too, so it cannot intercept filters above the grid.
-                RemoteImage(url: design.cover, pixelWidth: 640).frame(height: 200).frame(maxWidth: .infinity).contentShape(Rectangle()).clipped()
-                    .overlay(alignment: .topLeading) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            ForEach([Metric.prints, .likes]) { metric in
-                                if let growth = deltas[metric], growth > 0 {
-                                    ModelGrowthBadge(metric: metric, delta: growth, fresh: model.latestModelIncreases[design.id]?[metric])
-                                }
-                            }
-                        }.padding(12)
+                ModelCardArtwork(cover: design.cover) {
+                    ForEach(ModelActivity.badgeMetrics(for: deltas, increasesOnly: true)) { metric in
+                        if let growth = deltas[metric] {
+                            ModelGrowthBadge(metric: metric, delta: growth, fresh: model.latestModelIncreases[design.id]?[metric])
+                        }
                     }
+                }
             }.buttonStyle(.plain).accessibilityLabel("View \(design.title)")
             VStack(alignment: .leading, spacing: 16) {
                 HStack(alignment: .top, spacing: 10) {

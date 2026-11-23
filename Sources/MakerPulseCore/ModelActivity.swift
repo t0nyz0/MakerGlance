@@ -30,6 +30,15 @@ public struct ObservedModelActivity: Identifiable, Equatable, Sendable {
 public enum ModelActivity {
     public static let metrics: [Metric] = [.likes, .downloads, .boosts, .prints, .collections]
 
+    public static func badgeMetrics(for deltas: [Metric: Int], increasesOnly: Bool = false) -> [Metric] {
+        let changed = metrics.filter { metric in
+            guard let delta = deltas[metric] else { return false }
+            return increasesOnly ? delta > 0 : delta != 0
+        }
+        // Preserve print emphasis without dropping any other changed metric.
+        return (deltas[.prints] ?? 0) > 0 ? [.prints] + changed.filter { $0 != .prints } : changed
+    }
+
     // Use full-fidelity snapshots, independent of notification preferences and
     // high-water marks. A fetch or title/image edit is not metric activity.
     public static func ranked(designs: [Design], samples: [String: [Sample]], events: [Activity], window: ModelActivityWindow,
